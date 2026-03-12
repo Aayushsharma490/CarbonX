@@ -39,7 +39,7 @@ export default function DashboardPage() {
     const [mounted, setMounted] = useState(false);
     const { addNotification } = useEnergyNotifications();
     const { config } = useSystem();
-    const { gatewayData, loading, isLive } = useTelemetry();
+    const { gatewayData, loading, isLive, latestLogs } = useTelemetry();
 
     const debouncedLossCheck = useRef(
         debounce((gw: RXEnergyUnit) => {
@@ -58,11 +58,67 @@ export default function DashboardPage() {
 
     useEffect(() => { setMounted(true); }, []);
 
+    // --- 1. Transmission Loss Monitor (Legacy) ---
     useEffect(() => {
         if (mounted && gatewayData) {
             debouncedLossCheck(gatewayData);
         }
     }, [mounted, gatewayData, debouncedLossCheck]);
+
+    // --- 2. Live Telemetry Alert Monitor (New) ---
+    const lastProcessedLogId = useRef<string | null>(null);
+
+    useEffect(() => {
+        if (!mounted || !latestLogs || latestLogs.length === 0) return;
+
+        const latestLog = latestLogs[0];
+        if (latestLog.id === lastProcessedLogId.current) return;
+
+        lastProcessedLogId.current = latestLog.id;
+
+        // Extract telemetry data
+        const nodeId = latestLog.node_id || latestLog.nodeId || "Unknown";
+        const rawTel = latestLog.telemetry || {};
+        const temp = latestLog.Temp || rawTel.temperature_c;
+        const vibration = latestLog.Vib || rawTel.vibration_v_rms;
+        const status = latestLog.status;
+
+        // Alert Triggering Logic
+        if (temp > 65) {
+            addNotification({
+                severity: 'critical',
+                title: '🔥 High Temperature',
+                message: `${nodeId}: Critical temperature detected (${temp}°C)!`,
+                nodeId
+            });
+        } else if (temp > 55) {
+            addNotification({
+                severity: 'warning',
+                title: '⚠️ Temperature Warning',
+                message: `${nodeId}: Temperature rising (${temp}°C).`,
+                nodeId
+            });
+        }
+
+        if (vibration === 'HIGH' || vibration > 4.0) {
+            addNotification({
+                severity: 'critical',
+                title: '📳 High Vibration',
+                message: `${nodeId}: Abnormal vibration levels detected!`,
+                nodeId
+            });
+        }
+
+        if (status === 'WARNING' || status === 'CRITICAL') {
+            addNotification({
+                severity: status === 'CRITICAL' ? 'critical' : 'warning',
+                title: `📡 System ${status}`,
+                message: `${nodeId}: ${latestLog.message || 'Anomalous operational state detected.'}`,
+                nodeId
+            });
+        }
+
+    }, [mounted, latestLogs, addNotification]);
 
     if (!mounted || loading) return <div className="p-20 text-center">Loading CarbonX Dashboard...</div>;
     if (!gatewayData) return <div className="p-20 text-center text-brand-green-dark/40">Waiting for Telemetry Feed...</div>;
