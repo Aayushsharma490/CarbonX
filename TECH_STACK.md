@@ -15,7 +15,6 @@ This document outlines the core technologies, libraries, and tools used to build
 
 ## Data Visualization & Graphics
 - **[Recharts](https://recharts.org/) (v3.8.0)**: Composable charting library built on React components for rendering performance and carbon data graphs.
-- **[Three.js](https://threejs.org/)**: JavaScript 3D library for rendering the interactive globe and liquid ether effects.
 
 ## Animation & Interactions
 - **[Framer Motion](https://www.framer.com/motion/) (v12.35.2)**: Open source, production-ready animation and gesture library for React.
