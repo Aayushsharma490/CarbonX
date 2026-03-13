@@ -5,7 +5,7 @@ import { db, realtimeDb } from '@/lib/firebase';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { ref, onValue, query as rtdbQuery, limitToLast } from 'firebase/database';
 import { useSystem } from './SystemContext';
-import { useGlobalNotifications } from './NotificationContext';
+import { useGlobalNotifications } from '@/context/NotificationContext';
 import type { RXEnergyUnit, TXEnergyUnit } from '@/types/energy';
 
 interface TelemetryContextType {

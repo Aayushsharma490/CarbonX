@@ -8,6 +8,8 @@ interface NotificationContextType {
     notifications: EnergyNotification[];
     activeNotifications: EnergyNotification[];
     criticalCount: number;
+    isMuted: boolean;
+    toggleMute: () => void;
     addNotification: (params: {
         severity: NotificationSeverity;
         title: string;
@@ -27,6 +29,11 @@ let notificationCounter = 0;
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
     const [notifications, setNotifications] = useState<EnergyNotification[]>([]);
+    const [isMuted, setIsMuted] = useState(false);
+
+    const toggleMute = useCallback(() => {
+        setIsMuted((prev) => !prev);
+    }, []);
 
     const playCriticalAlert = useCallback(() => {
         try {
@@ -77,13 +84,13 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             dismissed: false,
         };
 
-        if (isCritical) {
+        if (isCritical && !isMuted) {
             playCriticalAlert();
         }
 
         setNotifications((prev) => [notification, ...prev].slice(0, 20));
         return notification.id;
-    }, [playCriticalAlert]);
+    }, [playCriticalAlert, isMuted]);
 
     const dismiss = useCallback((id: string) => {
         setNotifications((prev) =>
@@ -107,6 +114,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             notifications,
             activeNotifications,
             criticalCount,
+            isMuted,
+            toggleMute,
             addNotification,
             dismiss,
             dismissAll,

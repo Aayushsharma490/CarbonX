@@ -43,9 +43,7 @@ export const metadata: Metadata = {
   },
 };
 
-import { SystemProvider } from '@/context/SystemContext';
-import { TelemetryProvider } from '@/context/TelemetryContext';
-import { NotificationProvider } from '@/context/NotificationContext';
+import { Providers } from '@/components/Providers';
 import { NotificationOverlay } from '@/components/NotificationSystem';
 
 export default function RootLayout({
@@ -64,38 +62,32 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className={`${inter.className} min-h-screen relative overflow-x-hidden text-brand-green-dark`} suppressHydrationWarning>
-        <AuthProvider>
+        <Providers>
           <AuthGuard>
-            <SystemProvider>
-                <NotificationProvider>
-                    <TelemetryProvider>
-                        {/* PWA Install Prompt Banner */}
-                        <PWAInstallBanner />
+            {/* PWA Install Prompt Banner */}
+            <PWAInstallBanner />
 
-                        {/* Responsive Navigation — top-left for desktop, hamburger for mobile */}
-                        <AppNavigation />
+            {/* Responsive Navigation — top-left for desktop, hamburger for mobile */}
+            <AppNavigation />
 
-                        <NotificationOverlay />
+            <NotificationOverlay />
 
-                        {/* FloatingLines React Bits Background */}
-                        <div className="fixed inset-0 -z-50 bg-[#FCFDFD]">
-                        <FloatingLines
-                            linesGradient={['#25671E', '#48A111', '#F2B50B']}
-                            parallax={true}
-                            topWavePosition={{ x: 10.0, y: 0.5, rotate: -0.4 }}
-                            middleWavePosition={{ x: 5.0, y: 0.0, rotate: 0.2 }}
-                            bottomWavePosition={{ x: 2.0, y: -0.7, rotate: 0.4 }}
-                        />
-                        </div>
+            {/* FloatingLines React Bits Background */}
+            <div className="fixed inset-0 -z-50 bg-[#FCFDFD]">
+              <FloatingLines
+                linesGradient={['#25671E', '#48A111', '#F2B50B']}
+                parallax={true}
+                topWavePosition={{ x: 10.0, y: 0.5, rotate: -0.4 }}
+                middleWavePosition={{ x: 5.0, y: 0.0, rotate: 0.2 }}
+                bottomWavePosition={{ x: 2.0, y: -0.7, rotate: 0.4 }}
+              />
+            </div>
 
-                        <main className="relative z-10 p-4 md:p-8 max-w-7xl mx-auto min-h-[calc(100vh-80px)] pb-8">
-                        {children}
-                        </main>
-                    </TelemetryProvider>
-                </NotificationProvider>
-            </SystemProvider>
+            <main className="relative z-10 p-4 md:p-8 max-w-7xl mx-auto min-h-[calc(100vh-80px)] pb-8">
+              {children}
+            </main>
           </AuthGuard>
-        </AuthProvider>
+        </Providers>
       </body>
     </html>
   );

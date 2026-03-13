@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import Image from 'next/image';
@@ -160,8 +160,8 @@ function HeroSection() {
       <div className="absolute inset-0 grid-overlay opacity-40 -z-20" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-7xl aspect-square bg-brand-green-light/5 blur-[140px] rounded-full pointer-events-none -z-10" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center w-full max-w-7xl mx-auto relative z-10">
-        <div className="space-y-10 text-center lg:text-left">
+      <div className="grid grid-cols-1 lg:grid-cols-[1.4fr,0.6fr] gap-10 items-center w-full max-w-[90rem] mx-auto relative z-10 px-6 lg:px-20">
+        <div className="space-y-10 text-center lg:text-left z-20 lg:pr-20">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -171,7 +171,7 @@ function HeroSection() {
             <div className="p-2 bg-brand-green-light rounded-full">
               <Zap size={16} className="text-white" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-green-dark/60">System Ready GÇó v4.0</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-green-dark/60">System Ready • v4.0</span>
           </motion.div>
 
           <div className="space-y-6">
@@ -179,7 +179,7 @@ function HeroSection() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.8 }}
-              className="text-7xl md:text-9xl font-black text-brand-green-dark tracking-tighter uppercase italic leading-[0.8] text-glow"
+              className="text-6xl sm:text-7xl xl:text-8xl 2xl:text-9xl font-black text-brand-green-dark tracking-tighter uppercase italic leading-[0.8] text-glow"
             >
               Industrial <br />
               <span className="text-brand-green-light underline decoration-[12px] underline-offset-[12px]">Intelligence</span>
@@ -188,7 +188,7 @@ function HeroSection() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="text-xl md:text-2xl text-brand-green-dark/50 font-medium max-w-xl mx-auto lg:mx-0 leading-relaxed"
+              className="text-lg md:text-xl text-brand-green-dark/50 font-medium max-w-xl mx-auto lg:mx-0 leading-relaxed"
             >
               Monitor every watt, detect every anomaly, and optimize your entire plant with one unified AI dashboard.
             </motion.p>
@@ -210,31 +210,29 @@ function HeroSection() {
         </div>
 
         {/* Device Image Showcase */}
-        <div className="relative h-[650px] flex flex-col items-center justify-center gap-10 group">
+        <div className="relative h-[400px] lg:h-[600px] flex flex-col items-center justify-center group z-10 w-full">
           <div className="absolute inset-0 bg-brand-green-light/5 blur-[100px] rounded-full scale-75 animate-pulse" />
 
           <motion.div
-            initial={{ opacity: 0, x: 50, scale: 0.9 }}
+            initial={{ opacity: 0, x: 100, scale: 0.8 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={{ type: "spring", stiffness: 100 }}
-            className="w-full max-w-lg lg:max-w-xl aspect-square glass-thick md:rounded-[80px] rounded-[50px] border border-white flex items-center justify-center relative shadow-inner overflow-hidden"
+            transition={{ type: "spring", stiffness: 80 }}
+            className="w-full max-w-sm lg:max-w-md aspect-square glass-thick md:rounded-[60px] rounded-[40px] border border-white flex items-center justify-center relative shadow-2xl overflow-hidden"
           >
-            <div className="absolute inset-0 dot-pattern opacity-20" />
-            <div className="absolute top-8 left-8 p-3 glass rounded-2xl border-white/40">
-              <div className="w-2 h-2 rounded-full bg-brand-green-light animate-ping" />
+            <div className="absolute inset-0 dot-pattern opacity-10" />
+            <div className="absolute top-6 left-6 p-2 glass rounded-xl border-white/40">
+              <div className="w-1.5 h-1.5 rounded-full bg-brand-green-light animate-ping" />
             </div>
 
-            <div className="relative z-10 w-full h-full p-12 transition-transform duration-700 group-hover:scale-105">
+            <div className="relative z-10 w-full h-full p-8 transition-transform duration-700 group-hover:scale-110">
               <Image
                 src="/image.png"
                 alt="CarbonX Edge Node"
                 fill
-                className="object-contain p-8 drop-shadow-2xl"
+                className="object-contain p-4 drop-shadow-2xl"
                 priority
               />
             </div>
-
-            <div className="absolute bottom-0 right-0 w-32 h-32 border-r-2 border-b-2 border-brand-green-light/10 rounded-br-[80px]" />
           </motion.div>
         </div>
       </div>

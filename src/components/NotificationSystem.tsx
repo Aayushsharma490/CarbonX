@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { X, AlertTriangle, Info, Zap, Shield } from 'lucide-react';
+import { X, AlertTriangle, Info, Zap, Shield, Bell, BellOff } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useGlobalNotifications } from '@/context/NotificationContext';
 import type { EnergyNotification, NotificationSeverity } from '@/types/energy';
@@ -73,8 +73,14 @@ function NotificationToast({
 // ─── Notification Overlay ──────────────────────────────────────────────────
 
 export function NotificationOverlay() {
-    const { activeNotifications, criticalCount, dismiss } = useGlobalNotifications();
+    const { activeNotifications, dismiss, isMuted } = useGlobalNotifications();
+    const pathname = usePathname();
 
+    // Only show on dashboard and internal pages
+    const isExcludedPage = pathname === '/' || pathname === '/login';
+    
+    // IF MUTED: Hide toasts entirely to keep screen clean (User: "kuch bhi nhi aaye screne par")
+    if (isExcludedPage || isMuted) return null;
     if (activeNotifications.length === 0) return null;
 
     return (

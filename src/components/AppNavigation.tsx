@@ -16,9 +16,11 @@ import {
     Menu,
     X,
     LogOut,
-    UserCircle,
+    Bell,
+    BellOff
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useGlobalNotifications } from '@/context/NotificationContext';
 
 const NAV_ITEMS = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -32,6 +34,7 @@ const NAV_ITEMS = [
 // ─── Desktop Top Navigation (Floating Pill) ──────────────────────────────────
 function DesktopNav({ pathname }: { pathname: string }) {
     const { role, logout } = useAuth();
+    const { isMuted, toggleMute } = useGlobalNotifications();
     const [scrolled, setScrolled] = useState(false);
 
     useEffect(() => {
@@ -87,9 +90,22 @@ function DesktopNav({ pathname }: { pathname: string }) {
                 })}
             </ul>
 
-            {/* User & Status */}
+            {/* User & Global Actions */}
             <div className="flex items-center gap-3 pr-2 border-l border-black/5 pl-4">
-                <div className="flex items-center gap-2 pr-4 text-[9px] font-black text-brand-green-dark/40 uppercase tracking-widest">
+                <button
+                    onClick={toggleMute}
+                    className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-sm border",
+                        isMuted 
+                            ? "bg-zinc-100 border-zinc-200 text-zinc-400 hover:text-brand-green-dark" 
+                            : "bg-brand-green-light/10 border-brand-green-light/20 text-brand-green-light hover:bg-brand-green-light hover:text-white"
+                    )}
+                    title={isMuted ? "Unmute Alerts" : "Mute Alerts"}
+                >
+                    {isMuted ? <BellOff size={16} /> : <Bell size={16} className={cn(!isMuted && "animate-pulse")} />}
+                </button>
+
+                <div className="flex items-center gap-2 pr-4 text-[9px] font-black text-brand-green-dark/40 uppercase tracking-widest border-l border-black/5 pl-4">
                     <span className="w-2 h-2 rounded-full bg-brand-green-light animate-pulse" />
                     {role}
                 </div>
@@ -107,7 +123,8 @@ function DesktopNav({ pathname }: { pathname: string }) {
 // ─── Mobile Navigation (hamburger) ──────────────────────────────────────────
 function MobileNav({ pathname }: { pathname: string }) {
     const [isOpen, setIsOpen] = useState(false);
-    const { role, logout, user } = useAuth();
+    const { role, logout } = useAuth();
+    const { isMuted, toggleMute } = useGlobalNotifications();
 
     const visibleNavItems = NAV_ITEMS.filter(item => {
         if (role === 'ADMIN') return true;
@@ -135,59 +152,44 @@ function MobileNav({ pathname }: { pathname: string }) {
                     <Image src="/carbon_logo.png" alt="CarbonX Logo" width={100} height={28} className="object-contain" priority />
                 </Link>
 
-                <button
-                    id="hamburger-btn"
-                    onClick={() => setIsOpen(!isOpen)}
-                    aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
-                    className="w-9 h-9 flex items-center justify-center rounded-lg text-brand-green-dark/80 hover:bg-brand-green-light/10 transition-all duration-200 cursor-pointer"
-                >
-                    {isOpen ? <X size={22} /> : <Menu size={22} />}
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={toggleMute}
+                        className={cn(
+                            "w-9 h-9 flex items-center justify-center rounded-lg transition-all",
+                            isMuted ? "text-zinc-400" : "text-brand-green-light"
+                        )}
+                    >
+                        {isMuted ? <BellOff size={20} /> : <Bell size={20} />}
+                    </button>
+                    <button
+                        id="hamburger-btn"
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="w-9 h-9 flex items-center justify-center rounded-lg text-brand-green-dark/80 hover:bg-brand-green-light/10 transition-all duration-200 cursor-pointer"
+                    >
+                        {isOpen ? <X size={22} /> : <Menu size={22} />}
+                    </button>
+                </div>
             </div>
 
             {isOpen && (
-                <div
-                    className="md:hidden fixed inset-0 z-[100] flex"
-                    id="mobile-menu"
-                >
-                    <div
-                        className="absolute inset-0 bg-white/60 backdrop-blur-md"
-                        onClick={() => setIsOpen(false)}
-                    />
-
-                    <div
-                        className="relative ml-auto w-72 h-full glass-thick border-l border-brand-green-light/10 shadow-2xl flex flex-col p-8 gap-8 animate-slide-in overflow-hidden"
-                    >
+                <div className="md:hidden fixed inset-0 z-[100] flex" id="mobile-menu">
+                    <div className="absolute inset-0 bg-white/60 backdrop-blur-md" onClick={() => setIsOpen(false)} />
+                    <div className="relative ml-auto w-72 h-full glass-thick border-l border-brand-green-light/10 shadow-2xl flex flex-col p-8 gap-8 animate-slide-in overflow-hidden">
                         <div className="absolute inset-0 dot-pattern opacity-20 -z-10" />
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <Image src="/carbon_logo.png" alt="CarbonX Logo" width={90} height={24} className="object-contain" />
-                            </div>
-                            <button
-                                onClick={() => setIsOpen(false)}
-                                className="w-8 h-8 flex items-center justify-center rounded-lg
-                           text-brand-green-dark/40 hover:text-brand-green-dark transition-colors cursor-pointer"
-                            >
+                            <Image src="/carbon_logo.png" alt="CarbonX Logo" width={90} height={24} className="object-contain" />
+                            <button onClick={() => setIsOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-lg text-brand-green-dark/40 hover:text-brand-green-dark transition-colors cursor-pointer">
                                 <X size={18} />
                             </button>
                         </div>
-
                         <nav>
                             <ul className="flex flex-col gap-1" role="list">
                                 {visibleNavItems.map(({ href, label, icon: Icon }) => {
                                     const isActive = pathname === href;
                                     return (
                                         <li key={href}>
-                                            <Link
-                                                href={href}
-                                                id={`mobile-nav-${label.toLowerCase().replace(/\s+/g, '-')}`}
-                                                className={cn(
-                                                    'flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200',
-                                                    isActive
-                                                        ? 'bg-brand-green-dark text-white shadow-lg'
-                                                        : 'text-brand-green-dark/70 hover:bg-brand-green-light/5'
-                                                )}
-                                            >
+                                            <Link href={href} className={cn('flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200', isActive ? 'bg-brand-green-dark text-white shadow-lg' : 'text-brand-green-dark/70 hover:bg-brand-green-light/5')}>
                                                 <Icon size={20} />
                                                 {label}
                                             </Link>
@@ -196,12 +198,8 @@ function MobileNav({ pathname }: { pathname: string }) {
                                 })}
                             </ul>
                         </nav>
-
                         <div className="mt-auto space-y-4">
-                            <button
-                                onClick={logout}
-                                className="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-red-50 text-red-600 font-black text-[10px] uppercase tracking-widest border border-red-500/10"
-                            >
+                            <button onClick={logout} className="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-red-50 text-red-600 font-black text-[10px] uppercase tracking-widest border border-red-500/10">
                                 Sign Out Session
                                 <LogOut size={16} />
                             </button>
@@ -221,9 +219,7 @@ export function AppNavigation() {
     const pathname = usePathname();
     const { isAuthenticated } = useAuth();
 
-    // Hide navigation on login page or when logged out on home page (landing)
     const hideNav = pathname === '/login' || (!isAuthenticated && pathname === '/');
-
     if (hideNav) return null;
 
     return (
