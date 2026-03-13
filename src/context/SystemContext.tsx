@@ -54,7 +54,28 @@ const DEFAULT_CONFIG: SystemConfig = {
             id: 'TX-2',
             name: 'Transmitter 2 (Zone-B)',
             devices: [
+                { id: 'TX-JMS', name: 'JMS Industrial', phaseType: 'three', power: 25000, current: 35 },
+                { id: 'TX-EBOOT', name: 'EBOOT CNC', phaseType: 'three', power: 18000, current: 28 },
+                { id: 'TX-SARA', name: 'SARA Mill', phaseType: 'three', power: 22000, current: 32 },
                 { id: 'D-003', name: 'Compressor Array', phaseType: 'three', power: 12000, current: 18 }
+            ]
+        },
+        {
+            id: 'TX-3',
+            name: 'Transmitter 3 (Zone-C)',
+            devices: [
+                { id: 'TX-ALPHA', name: 'Alpha Grinder', phaseType: 'three', power: 20000, current: 30 },
+                { id: 'TX-BETA', name: 'Beta Press', phaseType: 'three', power: 28000, current: 38 },
+                { id: 'TX-GAMMA', name: 'Gamma Lathe', phaseType: 'three', power: 16000, current: 25 }
+            ]
+        },
+        {
+            id: 'XT-2',
+            name: 'XT2 Crane (Zone-D)',
+            devices: [
+                { id: 'XT2-CRANE-01', name: 'XT2 Main Crane', phaseType: 'three', power: 35000, current: 45 },
+                { id: 'XT2-HOIST-01', name: 'XT2 Hoist System', phaseType: 'three', power: 28000, current: 38 },
+                { id: 'XT2-MOTOR-01', name: 'XT2 Drive Motor', phaseType: 'three', power: 32000, current: 42 }
             ]
         }
     ]

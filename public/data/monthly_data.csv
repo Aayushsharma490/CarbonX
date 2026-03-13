@@ -1,0 +1,13 @@
+machine_name,node_id,month,avg_kwh,total_kwh,avg_pf,peak_temp
+JMS Industrial,TX-JMS,Jan,327.0,10725.4,0.88,65.9
+JMS Industrial,TX-JMS,Feb,329.3,9551.5,0.89,74.4
+JMS Industrial,TX-JMS,Mar,342.7,9555.1,0.90,71.2
+EBOOT CNC,TX-EBOOT,Jan,354.2,10139.6,0.91,73.4
+EBOOT CNC,TX-EBOOT,Feb,317.0,9908.5,0.92,67.5
+EBOOT CNC,TX-EBOOT,Mar,377.0,9925.1,0.90,68.3
+SARA Mill,TX-SARA,Jan,344.9,9716.5,0.88,67.0
+SARA Mill,TX-SARA,Feb,377.6,9647.5,0.91,72.5
+SARA Mill,TX-SARA,Mar,346.5,9779.8,0.90,71.1
+Compressor Array,D-003,Jan,337.9,10303.0,0.88,70.6
+Compressor Array,D-003,Feb,391.4,9974.1,0.89,71.2
+Compressor Array,D-003,Mar,318.6,10172.4,0.90,71.7

@@ -16,7 +16,7 @@ import {
 } from 'recharts';
 import { NotificationOverlay } from '@/components/NotificationSystem';
 import { FormulaIntelligence } from '@/components/FormulaIntelligence';
-import { useEnergyNotifications } from '@/hooks/useEnergyNotifications';
+import { useGlobalNotifications } from '@/context/NotificationContext';
 import { calculateEnergyLoss, calculateMachineHealth, kwhToCo2Kg, getStatusColor } from '@/lib/energyCalculations';
 import { debounce } from '@/lib/debounce';
 import { cn } from '@/lib/utils';
@@ -37,7 +37,7 @@ const historicalTrendPlaceholder = [
 
 export default function DashboardPage() {
     const [mounted, setMounted] = useState(false);
-    const { addNotification } = useEnergyNotifications();
+    const { addNotification } = useGlobalNotifications();
     const { config } = useSystem();
     const { gatewayData, loading, isLive, latestLogs } = useTelemetry();
 
@@ -132,7 +132,6 @@ export default function DashboardPage() {
 
     return (
         <div className="space-y-6 pb-10 fade-in px-4 md:px-0">
-            <NotificationOverlay />
 
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center p-8 glass-thick md:rounded-[50px] rounded-[35px] shadow-sm border border-brand-green-light/10 relative group">
                 <div className="absolute inset-0 grid-overlay opacity-10 -z-10 rounded-[inherit] overflow-hidden" />

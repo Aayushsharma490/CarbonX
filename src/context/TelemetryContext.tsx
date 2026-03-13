@@ -1,10 +1,11 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { db, realtimeDb } from '@/lib/firebase';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { ref, onValue, query as rtdbQuery, limitToLast } from 'firebase/database';
 import { useSystem } from './SystemContext';
+import { useGlobalNotifications } from './NotificationContext';
 import type { RXEnergyUnit, TXEnergyUnit } from '@/types/energy';
 
 interface TelemetryContextType {
@@ -19,11 +20,190 @@ const TelemetryContext = createContext<TelemetryContextType | undefined>(undefin
 
 export function TelemetryProvider({ children }: { children: React.ReactNode }) {
     const { config } = useSystem();
+    const { addNotification } = useGlobalNotifications();
     const [latestLogs, setLatestLogs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isLive, setIsLive] = useState(false);
+    const [simulatedNodes, setSimulatedNodes] = useState<Map<string, any>>(new Map());
+    const [csvData, setCsvData] = useState<any[]>([]);
+    const [tick, setTick] = useState(0);
+
+    const prevStatuses = useRef<Map<string, boolean>>(new Map());
+    const lastAlertTime = useRef<Map<string, number>>(new Map());
+
+    // --- CSV Loader ---
+    useEffect(() => {
+        fetch(`/data/jms_eboot_sara_daily.csv?t=${Date.now()}`)
+            .then(res => res.text())
+            .then(text => {
+                const lines = text.split('\n');
+                const headers = lines[0].split(',').map(h => h.trim());
+                const data = lines.slice(1).filter(l => l.trim()).map(line => {
+                    const values = line.split(',');
+                    return headers.reduce((obj, header, i) => {
+                        obj[header] = values[i]?.trim();
+                        return obj;
+                    }, {} as any);
+                });
+                setCsvData(data);
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error("Failed to load telemetry CSV:", err);
+                setLoading(false);
+            });
+    }, []);
+
+    // --- CSV Sampling Interval (5 seconds) with XT2 Crane Real-Time Alerts ---
+    useEffect(() => {
+        if (csvData.length === 0) return;
+
+        const interval = setInterval(() => {
+            const newSimulated = new Map();
+            const machineIds = ['TX-JMS', 'TX-EBOOT', 'TX-SARA', 'D-003', 'XT2-CRANE-01', 'XT2-HOIST-01', 'XT2-MOTOR-01'];
+            
+            machineIds.forEach(id => {
+                const machineRows = csvData.filter(r => r.node_id === id);
+                let rowData;
+                
+                if (machineRows.length > 0) {
+                    rowData = machineRows[Math.floor(Math.random() * machineRows.length)];
+                } else {
+                    // Generate synthetic data for XT2 devices
+                    rowData = {
+                        node_id: id,
+                        active_power_kw: (Math.random() * 30 + 15).toFixed(2),
+                        temperature: (Math.random() * 25 + 45).toFixed(1),
+                        temperature_c: (Math.random() * 25 + 45).toFixed(1),
+                        vibration: (Math.random() * 2.5 + 0.3).toFixed(2),
+                        vibration_v_rms: (Math.random() * 2.5 + 0.3).toFixed(2),
+                        voltage_l1: (Math.random() * 20 + 390).toFixed(1),
+                        voltage_l2: (Math.random() * 20 + 390).toFixed(1),
+                        voltage_l3: (Math.random() * 20 + 390).toFixed(1),
+                        current_l1: (Math.random() * 15 + 30).toFixed(1),
+                        current_l2: (Math.random() * 15 + 30).toFixed(1),
+                        current_l3: (Math.random() * 15 + 30).toFixed(1),
+                        pf: (Math.random() * 0.15 + 0.85).toFixed(2),
+                        kwh: (Math.random() * 100 + 500).toFixed(2),
+                        kvarh: (Math.random() * 50 + 100).toFixed(2),
+                        co2_ppm: Math.floor(Math.random() * 100 + 400)
+                    };
+                }
+                
+                newSimulated.set(id, rowData);
+
+                // Real-Time Alert System (5-second monitoring) with throttling
+                const temp = parseFloat(rowData.temperature || rowData.temperature_c || 0);
+                const vibration = parseFloat(rowData.vibration || rowData.vibration_v_rms || 0);
+                const power = parseFloat(rowData.active_power_kw || 0);
+                const isXT2 = id.startsWith('XT2-');
+                const now = Date.now();
+                
+                // Throttle alerts to prevent spam (30 seconds between same alert type)
+                const canAlert = (alertKey: string) => {
+                    const lastTime = lastAlertTime.current.get(alertKey) || 0;
+                    if (now - lastTime > 30000) {
+                        lastAlertTime.current.set(alertKey, now);
+                        return true;
+                    }
+                    return false;
+                };
+                
+                const deviceName = config.txUnits.flatMap(tx => tx.devices).find(d => d.id === id)?.name || id;
+
+                // XT2 Crane-specific critical alerts
+                if (isXT2) {
+                    if (temp > 70 && canAlert(`${id}-temp-critical`)) {
+                        addNotification({
+                            severity: 'critical',
+                            title: `🚨 XT2 CRITICAL: ${deviceName}`,
+                            message: `EMERGENCY! Temperature: ${temp}°C - Immediate shutdown required!`,
+                            nodeId: id
+                        });
+                    } else if (temp > 65 && canAlert(`${id}-temp-warning`)) {
+                        addNotification({
+                            severity: 'warning',
+                            title: `⚠️ XT2 Alert: ${deviceName}`,
+                            message: `High temperature detected: ${temp}°C`,
+                            nodeId: id
+                        });
+                    }
+
+                    if (vibration > 3.0 && canAlert(`${id}-vib-critical`)) {
+                        addNotification({
+                            severity: 'critical',
+                            title: `🚨 XT2 VIBRATION: ${deviceName}`,
+                            message: `Critical vibration: ${vibration.toFixed(1)} mm/s - Check crane structure!`,
+                            nodeId: id
+                        });
+                    } else if (vibration > 2.2 && canAlert(`${id}-vib-warning`)) {
+                        addNotification({
+                            severity: 'warning',
+                            title: `📳 XT2 Vibration: ${deviceName}`,
+                            message: `Elevated vibration: ${vibration.toFixed(1)} mm/s`,
+                            nodeId: id
+                        });
+                    }
+
+                    if (power > 40 && canAlert(`${id}-power-warning`)) {
+                        addNotification({
+                            severity: 'warning',
+                            title: `⚡ XT2 Overload: ${deviceName}`,
+                            message: `Power spike detected: ${power} kW - Check load capacity`,
+                            nodeId: id
+                        });
+                    }
+                } else {
+                    // TX2 devices alerts
+                    if (temp > 65 && canAlert(`${id}-temp-critical`)) {
+                        addNotification({
+                            severity: 'critical',
+                            title: `🔥 TX2 Critical: ${deviceName}`,
+                            message: `Critical temperature detected: ${temp}°C`,
+                            nodeId: id
+                        });
+                    } else if (temp > 62 && canAlert(`${id}-temp-warning`)) {
+                        addNotification({
+                            severity: 'warning',
+                            title: `⚠️ TX2 Warning: ${deviceName}`,
+                            message: `Temperature rising: ${temp}°C`,
+                            nodeId: id
+                        });
+                    }
+
+                    if (vibration > 2.0 && canAlert(`${id}-vib-warning`)) {
+                        addNotification({
+                            severity: 'warning',
+                            title: `📳 TX2 Vibration: ${deviceName}`,
+                            message: `High vibration detected: ${vibration.toFixed(1)} mm/s`,
+                            nodeId: id
+                        });
+                    }
+                }
+
+                // Online/Offline status monitoring
+                const isOnline = true;
+                if (prevStatuses.current.get(id) === false && isOnline === true) {
+                    if (canAlert(`${id}-online`)) {
+                        addNotification({
+                            severity: 'info',
+                            title: `📡 ${isXT2 ? 'XT2' : 'TX2'} Node Online`,
+                            message: `${deviceName} has reconnected to the protocol.`,
+                            nodeId: id
+                        });
+                    }
+                }
+                prevStatuses.current.set(id, isOnline);
+            });
+            setSimulatedNodes(newSimulated);
+            setTick(t => t + 1);
+        }, 5000); // 5-second real-time monitoring
+
+        return () => clearInterval(interval);
+    }, [csvData, addNotification]);
 
     useEffect(() => {
+        setLoading(true);
         // --- 1. Firestore Listener (Legacy/Backup) ---
         let unsubscribeFirestore = () => { };
         if (db) {
@@ -32,11 +212,10 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setLatestLogs(prev => {
                     const combined = [...data, ...prev].slice(0, 100);
-                    // Filter duplicates by id or Time
                     return Array.from(new Map(combined.map(item => [item.id || item.Time, item])).values());
                 });
-                setLoading(false);
                 setIsLive(true);
+                setLoading(false);
             }, (error) => {
                 console.warn("Firebase telemetry listener failed:", error);
                 setIsLive(false);
@@ -54,20 +233,22 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
                     const logsArray = Object.keys(data).map(key => ({
                         id: key,
                         ...data[key]
-                    })).reverse(); // Newest first
+                    })).reverse(); 
 
                     setLatestLogs(prev => {
                         const combined = [...logsArray, ...prev].slice(0, 100);
                         return Array.from(new Map(combined.map(item => [item.id || item.Time || Math.random(), item])).values());
                     });
-                    setLoading(false);
                     setIsLive(true);
                 }
+                setLoading(false);
             }, (error) => {
                 console.warn("RTDB listener failed:", error);
                 setIsLive(false);
                 setLoading(false);
             });
+        } else {
+            setLoading(false);
         }
 
         return () => {
@@ -78,32 +259,7 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
 
     // Transform raw logs into high-level energy units
     const { gatewayData, nodeData } = useMemo(() => {
-        // Fallback for simulation/loading
-        const createMockNode = (device: any, tx: any) => ({
-            nodeId: device.id,
-            name: device.name,
-            zone: tx.name,
-            phaseType: device.phaseType,
-            targetKw: device.power / 1000,
-            kwh: 0,
-            kvarh: 0,
-            currentKw: 0,
-            phaseVoltages: [0, 0, 0] as [number, number, number],
-            phaseCurrents: [0, 0, 0] as [number, number, number],
-            powerFactor: 0.95,
-            temperature: 45,
-            vibration: 0,
-            ppm: 420,
-            isOnline: false,
-            timestamp: new Date().toISOString()
-        });
-
-        if (latestLogs.length === 0) {
-            const mockNodes = config.txUnits.flatMap(tx => tx.devices.map(d => createMockNode(d, tx)));
-            return { gatewayData: null, nodeData: mockNodes };
-        }
-
-        // 1. Map TX Nodes based on latest unique telemetry per node_id
+        // 1. Latest per node for Firebase
         const latestPerNode = new Map<string, any>();
         latestLogs.forEach(log => {
             const id = log.node_id || log.nodeId;
@@ -114,37 +270,40 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
 
         const txNodes: TXEnergyUnit[] = config.txUnits.flatMap(tx =>
             tx.devices.map(device => {
-                const log = latestPerNode.get(tx.id) || latestPerNode.get(device.id);
+                let log: any;
+                let source = 'firebase';
 
-                // --- Unified extraction logic for Nested vs Flat Industrial formats ---
-                const rawTel = log?.telemetry || {};
-
-                // 1. Identification & Timing
-                const timestamp = log?.Time || log?.timestamp || new Date().toISOString();
-                const lastSeen = new Date(timestamp).getTime();
-                const isOnline = Date.now() - lastSeen < 45000; // Increased window for industrial latency
-
-                // 2. Power Logic (Support both direct kW and calculated from phases)
-                let currentKw = parseFloat(rawTel.active_power_kw || 0);
-                if (currentKw === 0 && log?.R_A) {
-                    // Calculate from industrial phase keys
-                    const phasePower = (
-                        (log.R_V || 230) * (log.R_A || 0) +
-                        (log.Y_V || 230) * (log.Y_A || 0) +
-                        (log.B_V || 230) * (log.B_A || 0)
-                    );
-                    currentKw = parseFloat((phasePower / 1000).toFixed(2));
+                if (tx.id === 'TX-2' || tx.id === 'XT-2' || simulatedNodes.has(device.id)) {
+                    log = simulatedNodes.get(device.id);
+                    source = 'csv';
+                } else {
+                    log = latestPerNode.get(tx.id) || latestPerNode.get(device.id);
                 }
 
-                // 3. Sensor Arrays
-                const ppm = log?.CO2 || rawTel.co2_ppm || 420;
-                const temp = log?.Temp || rawTel.temperature_c || 45;
+                if (!log) {
+                    return {
+                        nodeId: device.id,
+                        name: device.name,
+                        zone: tx.name,
+                        phaseType: device.phaseType,
+                        targetKw: device.power / 1000,
+                        kwh: 0, kvarh: 0, currentKw: 0,
+                        phaseVoltages: [400, 400, 400],
+                        phaseCurrents: [0, 0, 0],
+                        powerFactor: 0.95, temperature: 45, vibration: 0.5, ppm: 420,
+                        isOnline: false, timestamp: new Date().toISOString()
+                    };
+                }
 
-                // Vibration: handle "NORM"/"HIGH" strings or numeric
-                let vibration = rawTel.vibration_v_rms || 0;
-                if (log?.Vib === "NORM") vibration = 0.45;
-                else if (log?.Vib === "HIGH") vibration = 3.2;
-                else if (typeof log?.Vib === 'number') vibration = log.Vib;
+                // --- Extraction Mapping ---
+                const rawTel = log.telemetry || {};
+                const timestamp = log.Time || log.timestamp || new Date().toISOString();
+                
+                let currentKw = source === 'csv' ? parseFloat(log.active_power_kw) : parseFloat(rawTel.active_power_kw || 0);
+                if (currentKw === 0 && log.R_A && source === 'firebase') {
+                    const phasePower = ((log.R_V || 230) * (log.R_A || 0) + (log.Y_V || 230) * (log.Y_A || 0) + (log.B_V || 230) * (log.B_A || 0));
+                    currentKw = parseFloat((phasePower / 1000).toFixed(2));
+                }
 
                 return {
                     nodeId: device.id,
@@ -152,27 +311,31 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
                     zone: tx.name,
                     phaseType: device.phaseType,
                     targetKw: device.power / 1000,
-                    kwh: log?.kwh || rawTel.kwh || 0,
-                    kvarh: log?.kvarh || rawTel.kvarh || 0,
-                    currentKw,
-                    phaseVoltages: [log?.R_V || 400, log?.Y_V || 400, log?.B_V || 400],
-                    phaseCurrents: [log?.R_A || 0, log?.Y_A || 0, log?.B_A || 0],
-                    powerFactor: log?.PF || rawTel.power_factor || 0.92,
-                    temperature: temp,
-                    vibration: vibration,
-                    ppm: ppm,
-                    isOnline,
+                    kwh: parseFloat(log.kwh || rawTel.kwh || 0),
+                    kvarh: parseFloat(log.kvarh || rawTel.kvarh || 0),
+                    currentKw: currentKw || 0,
+                    phaseVoltages: source === 'csv' 
+                        ? [parseFloat(log.voltage_l1), parseFloat(log.voltage_l2), parseFloat(log.voltage_l3)]
+                        : [log.R_V || 400, log.Y_V || 400, log.B_V || 400],
+                    phaseCurrents: source === 'csv'
+                        ? [parseFloat(log.current_l1), parseFloat(log.current_l2), parseFloat(log.current_l3)]
+                        : [log.R_A || 0, log.Y_A || 0, log.B_A || 0],
+                    powerFactor: parseFloat(log.pf || log.PF || rawTel.power_factor || 0.92),
+                    temperature: parseFloat(log.temperature || log.temperature_c || log.Temp || rawTel.temperature_c || 45),
+                    vibration: typeof log.vibration === 'string' ? (log.vibration === 'NORM' ? 0.45 : 3.2) : parseFloat(log.vibration || log.vibration_v_rms || log.Vib || 0.5),
+                    ppm: parseFloat(log.co2_ppm || log.ppm || log.CO2 || 420),
+                    isOnline: source === 'csv' ? true : (Date.now() - new Date(timestamp).getTime() < 45000),
                     timestamp
                 };
             })
         );
 
-        // 2. Synthesize Gateway Data (Aggregate)
-        const totalKwh = txNodes.reduce((acc, n) => acc + n.kwh, 0) * 1.02; // Simulate line loss overhead at RX
+        // Aggregation logic
+        const totalKwh = txNodes.reduce((acc, n) => acc + n.kwh, 0);
         const gateway: RXEnergyUnit = {
             gatewayId: config.id,
             name: config.name,
-            totalKwh: totalKwh,
+            totalKwh: totalKwh * 1.02, 
             totalKvarh: txNodes.reduce((acc, n) => acc + n.kvarh, 0),
             voltage: txNodes[0]?.phaseVoltages[0] || 400,
             current: txNodes.reduce((acc, n) => acc + n.phaseCurrents[0], 0),
@@ -182,7 +345,7 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
         };
 
         return { gatewayData: gateway, nodeData: txNodes };
-    }, [latestLogs, config]);
+    }, [latestLogs, simulatedNodes, config, tick]);
 
     return (
         <TelemetryContext.Provider value={{ latestLogs, loading, isLive, gatewayData, nodeData }}>

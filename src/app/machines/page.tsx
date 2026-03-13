@@ -7,9 +7,10 @@ import { GaugeChart } from '@/components/GaugeChart';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Activity, ShieldCheck, Zap, Thermometer, Info, Wind } from 'lucide-react';
+import { Activity, ShieldCheck, Zap, Thermometer, Info, Wind, HeartPulse } from 'lucide-react';
 import type { TXEnergyUnit } from '@/types/energy';
 import { cn } from '@/lib/utils';
+import { calculateMachineHealth, getStatusColor } from '@/lib/energyCalculations';
 
 export default function MachinesPage() {
     const { config } = useSystem();
@@ -73,85 +74,88 @@ export default function MachinesPage() {
                 {ZONES.map(zone => (
                     <TabsContent key={zone} value={zone} className="mt-8">
                         <div className="grid grid-cols-1 gap-8">
-                            {filteredMachines.length > 0 ? (
-                                filteredMachines.map(machine => (
-                                    <Card key={machine.nodeId} className="glass-card border-none overflow-hidden hover:shadow-2xl transition-all duration-500 md:rounded-[35px] rounded-3xl">
-                                        <CardHeader className="bg-brand-green-dark/[0.02] border-b border-black/5 p-6">
-                                            <div className="flex justify-between items-center">
-                                                <div>
-                                                    <CardTitle className="text-2xl font-black text-brand-green-dark flex items-center gap-3">
-                                                        <ShieldCheck className="text-brand-green-light" size={24} />
-                                                        {machine.name}
-                                                    </CardTitle>
-                                                    <Badge variant="outline" className="mt-2 bg-white/50 border-black/5 text-[10px] font-black uppercase">
-                                                        ID: {machine.nodeId} • {machine.phaseType} Phase
-                                                    </Badge>
-                                                </div>
-                                                <div className="text-right">
-                                                    <div className="text-[10px] font-black opacity-40 uppercase tracking-widest">Efficiency</div>
-                                                    <div className="text-xl font-black text-brand-green-dark">{(machine.powerFactor * 100).toFixed(0)}%</div>
-                                                </div>
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent className="p-8">
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                                                {/* Gauge 1: Power */}
-                                                <GaugeChart
-                                                    label={`${machine.zone} Power`}
-                                                    value={machine.currentKw}
-                                                    max={machine.targetKw * 1.5}
-                                                    unit="kW"
-                                                />
+                                    {filteredMachines.length > 0 ? (
+                                        filteredMachines.map(machine => {
+                                            const health = calculateMachineHealth(machine);
+                                            const statusColor = getStatusColor(health.status);
 
-                                                {/* Gauge 2: Current */}
-                                                <GaugeChart
-                                                    label={`${machine.zone} Current`}
-                                                    value={machine.phaseCurrents[0]}
-                                                    max={100}
-                                                    unit="Amps"
-                                                />
+                                            return (
+                                                <Card key={machine.nodeId} className="glass-card border-none overflow-hidden hover:shadow-2xl transition-all duration-500 md:rounded-[35px] rounded-3xl">
+                                                    <CardHeader className="bg-brand-green-dark/[0.02] border-b border-black/5 p-6">
+                                                        <div className="flex justify-between items-center">
+                                                            <div>
+                                                                <CardTitle className="text-2xl font-black text-brand-green-dark flex items-center gap-3">
+                                                                    <div className="w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: statusColor }} />
+                                                                    {machine.name}
+                                                                </CardTitle>
+                                                                <Badge variant="outline" className="mt-2 bg-white/50 border-black/5 text-[10px] font-black uppercase">
+                                                                    ID: {machine.nodeId} • {machine.phaseType} Phase
+                                                                </Badge>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <div className="text-[10px] font-black opacity-40 uppercase tracking-widest">AI Health Score</div>
+                                                                <div className="text-2xl font-black" style={{ color: statusColor }}>{health.score}%</div>
+                                                            </div>
+                                                        </div>
+                                                    </CardHeader>
+                                                    <CardContent className="p-8">
+                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                                                            {/* Gauge 1: Power */}
+                                                            <GaugeChart
+                                                                label={`${machine.zone} Power`}
+                                                                value={machine.currentKw}
+                                                                max={machine.targetKw * 1.5}
+                                                                unit="kW"
+                                                            />
 
-                                                {/* Gauge 3: Voltage */}
-                                                <GaugeChart
-                                                    label={`${machine.zone} Voltage`}
-                                                    value={machine.phaseVoltages[0]}
-                                                    max={500}
-                                                    unit="Volts"
-                                                />
-                                            </div>
+                                                            {/* Gauge 2: Current */}
+                                                            <GaugeChart
+                                                                label={`${machine.zone} Current`}
+                                                                value={machine.phaseCurrents[0]}
+                                                                max={100}
+                                                                unit="Amps"
+                                                            />
 
-                                            {/* Machine Details Footer */}
-                                            <div className="mt-12 grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 md:rounded-3xl rounded-2xl bg-black/5">
-                                                <div className="p-4">
-                                                    <div className="flex items-center gap-2 text-[10px] font-black opacity-40 uppercase mb-1">
-                                                        <Activity size={14} className="text-orange-500" /> Vibration
-                                                    </div>
-                                                    <div className="font-black text-brand-green-dark">{machine.vibration.toFixed(2)} <span className="text-[10px] opacity-40">mm/s</span></div>
-                                                </div>
-                                                <div className="p-4">
-                                                    <div className="flex items-center gap-2 text-[10px] font-black opacity-40 uppercase mb-1">
-                                                        <Wind size={14} className="text-brand-yellow" /> Carbon PPM
-                                                    </div>
-                                                    <div className="font-black text-brand-green-dark">{machine.ppm} <span className="text-[10px] opacity-40">PPM</span></div>
-                                                </div>
-                                                <div className="p-4">
-                                                    <div className="flex items-center gap-2 text-[10px] font-black opacity-40 uppercase mb-1">
-                                                        <Thermometer size={14} className="text-blue-500" /> Temperature
-                                                    </div>
-                                                    <div className="font-black text-brand-green-dark">{machine.temperature.toFixed(1)}°C</div>
-                                                </div>
-                                                <div className="p-4">
-                                                    <div className="flex items-center gap-2 text-[10px] font-black opacity-40 uppercase mb-1">
-                                                        <Info size={14} className="text-emerald-500" /> Heartbeat
-                                                    </div>
-                                                    <div className="font-black text-brand-green-dark/40 text-[10px] truncate">
-                                                        {new Date(machine.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))
+                                                            {/* Gauge 3: Voltage */}
+                                                            <GaugeChart
+                                                                label={`${machine.zone} Voltage`}
+                                                                value={machine.phaseVoltages[0]}
+                                                                max={500}
+                                                                unit="Volts"
+                                                            />
+                                                        </div>
+
+                                                        {/* Machine Details Footer */}
+                                                        <div className="mt-12 grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 md:rounded-3xl rounded-2xl bg-black/5">
+                                                            <div className="p-4 border-r border-black/5">
+                                                                <div className="flex items-center gap-2 text-[10px] font-black opacity-40 uppercase mb-1">
+                                                                    <HeartPulse size={14} className="text-brand-green-light" /> Load Profile
+                                                                </div>
+                                                                <div className="font-black text-brand-green-dark">{(machine.powerFactor * 100).toFixed(0)}% <span className="text-[10px] opacity-40 uppercase">Eff</span></div>
+                                                            </div>
+                                                            <div className="p-4 border-r border-black/5">
+                                                                <div className="flex items-center gap-2 text-[10px] font-black opacity-40 uppercase mb-1">
+                                                                    <Wind size={14} className="text-brand-yellow" /> Carbon Drift
+                                                                </div>
+                                                                <div className="font-black text-brand-green-dark">{machine.ppm} <span className="text-[10px] opacity-40">PPM</span></div>
+                                                            </div>
+                                                            <div className="p-4 border-r border-black/5">
+                                                                <div className="flex items-center gap-2 text-[10px] font-black opacity-40 uppercase mb-1">
+                                                                    <Thermometer size={14} className="text-blue-500" /> Operating Temp
+                                                                </div>
+                                                                <div className="font-black text-brand-green-dark">{machine.temperature.toFixed(1)}°C</div>
+                                                            </div>
+                                                            <div className="p-4">
+                                                                <div className="flex items-center gap-2 text-[10px] font-black opacity-40 uppercase mb-1">
+                                                                    <Zap size={14} className="text-orange-500" /> Vibration
+                                                                </div>
+                                                                <div className="font-black text-brand-green-dark">{machine.vibration.toFixed(2)} <span className="text-[10px] opacity-40">mm/s</span></div>
+                                                            </div>
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                            );
+                                        })
                             ) : (
                                 <div className="glass p-20 md:rounded-[40px] rounded-3xl text-center border-none shadow-sm">
                                     <div className="w-20 h-20 bg-brand-green-light/10 rounded-full flex items-center justify-center mx-auto mb-6">

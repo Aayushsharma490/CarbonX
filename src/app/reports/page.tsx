@@ -21,6 +21,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { cn } from '@/lib/utils';
+import { calculateMachineHealth } from '@/lib/energyCalculations';
 
 export default function ReportsPage() {
     const { config } = useSystem();
@@ -38,6 +39,7 @@ export default function ReportsPage() {
     if (!mounted || loading) return <div className="p-20 text-center text-brand-green-dark/40">Loading Report Console...</div>;
 
     const allDevices = nodeData;
+    const tx2Devices = allDevices.filter(d => d.zone === 'Transmitter 2 (Zone-B)');
     const filteredDevices = selectedMachineId === 'all'
         ? allDevices
         : allDevices.filter(d => d.nodeId === selectedMachineId);
@@ -51,21 +53,28 @@ export default function ReportsPage() {
             return;
         }
 
-        const headers = ['Node ID', 'Machine Name', 'Zone', 'Phase Type', 'Load (kW)', 'Status'];
-        const rows = filteredDevices.map(d => [
-            d.nodeId,
-            d.name,
-            d.zone,
-            d.phaseType,
-            d.currentKw.toFixed(2),
-            'Online'
-        ]);
+        const headers = ['Node ID', 'Machine Name', 'Zone', 'Status', 'Health (%)', 'Load (kW)', 'Temp (°C)', 'PF', 'Vibration (mm/s)', 'CO2 (ppm)'];
+        const rows = filteredDevices.map(d => {
+            const health = calculateMachineHealth(d);
+            return [
+                d.nodeId,
+                d.name,
+                d.zone,
+                d.isOnline ? 'ONLINE' : 'OFFLINE',
+                `${health.score}%`,
+                d.currentKw.toFixed(2),
+                d.temperature.toFixed(1),
+                d.powerFactor.toFixed(2),
+                d.vibration.toFixed(2),
+                d.ppm.toFixed(0)
+            ];
+        });
 
         if (exportFormat === 'csv') {
             const csvContent = [
-                [`CarbonX Industrial Report - ${reportPeriod.toUpperCase()}`],
-                [`Scope: ${selectedMachineId === 'all' ? 'All Machines' : `Machine ${selectedMachineId}`}`],
-                [`Date: ${new Date().toLocaleString()}`],
+                [`CarbonX Industrial Protocol Report - ${reportPeriod.toUpperCase()}`],
+                [`Scope: ${selectedMachineId === 'all' ? 'All System Nodes' : `Machine ${selectedMachineId}`}`],
+                [`Generation Protocol: AI Verified - ${new Date().toLocaleString()}`],
                 [],
                 headers,
                 ...rows
@@ -112,7 +121,86 @@ export default function ReportsPage() {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-[70vh] fade-in px-4">
+        <div className="space-y-8 pb-10 fade-in px-4">
+            {/* TX2 Data Section */}
+            <Card className="glass-card md:rounded-[40px] rounded-3xl border-brand-green-light/5">
+                <CardHeader className="pt-8 px-8">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="text-brand-green-dark text-2xl font-black italic uppercase tracking-tight flex items-center gap-2">
+                                <Activity className="text-brand-green-light" size={24} />
+                                TX2 Live Data
+                            </CardTitle>
+                            <p className="text-[10px] font-bold text-brand-green-dark/40 uppercase tracking-widest italic mt-1">
+                                Transmitter 2 (Zone-B) - Real-time Telemetry
+                            </p>
+                        </div>
+                        <Badge variant="outline" className="bg-brand-green-light/10 border-brand-green-light/20 text-brand-green-light px-4 py-2 rounded-full font-black italic uppercase tracking-widest text-[10px]">
+                            <span className="w-2 h-2 rounded-full bg-brand-green-light animate-pulse mr-2" />
+                            CSV Protocol
+                        </Badge>
+                    </div>
+                </CardHeader>
+                <CardContent className="px-8 pb-8">
+                    {tx2Devices.length > 0 ? (
+                        <div className="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow className="border-brand-green-light/10">
+                                        <TableHead className="text-brand-green-dark/60 font-black text-[10px] uppercase tracking-widest">Machine</TableHead>
+                                        <TableHead className="text-brand-green-dark/60 font-black text-[10px] uppercase tracking-widest">Status</TableHead>
+                                        <TableHead className="text-brand-green-dark/60 font-black text-[10px] uppercase tracking-widest">Load (kW)</TableHead>
+                                        <TableHead className="text-brand-green-dark/60 font-black text-[10px] uppercase tracking-widest">Temp (°C)</TableHead>
+                                        <TableHead className="text-brand-green-dark/60 font-black text-[10px] uppercase tracking-widest">Vibration</TableHead>
+                                        <TableHead className="text-brand-green-dark/60 font-black text-[10px] uppercase tracking-widest">PF</TableHead>
+                                        <TableHead className="text-brand-green-dark/60 font-black text-[10px] uppercase tracking-widest">Energy (kWh)</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {tx2Devices.map(device => {
+                                        const health = calculateMachineHealth(device);
+                                        return (
+                                            <TableRow key={device.nodeId} className="border-brand-green-light/5">
+                                                <TableCell className="font-black text-brand-green-dark text-sm">
+                                                    <div>
+                                                        <div className="font-black">{device.name}</div>
+                                                        <div className="text-[9px] text-brand-green-dark/40 font-bold uppercase tracking-wider">{device.nodeId}</div>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge 
+                                                        variant="outline" 
+                                                        className={cn(
+                                                            "font-black text-[9px] uppercase tracking-widest px-3 py-1",
+                                                            device.isOnline 
+                                                                ? "bg-brand-green-light/10 border-brand-green-light/20 text-brand-green-light" 
+                                                                : "bg-red-500/10 border-red-500/20 text-red-500"
+                                                        )}
+                                                    >
+                                                        {device.isOnline ? 'ONLINE' : 'OFFLINE'}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="font-black text-brand-green-dark">{device.currentKw.toFixed(2)}</TableCell>
+                                                <TableCell className="font-black text-brand-green-dark">{device.temperature.toFixed(1)}</TableCell>
+                                                <TableCell className="font-black text-brand-green-dark">{device.vibration.toFixed(2)} mm/s</TableCell>
+                                                <TableCell className="font-black text-brand-green-dark">{device.powerFactor.toFixed(2)}</TableCell>
+                                                <TableCell className="font-black text-brand-green-dark">{device.kwh.toFixed(2)}</TableCell>
+                                            </TableRow>
+                                        );
+                                    })}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    ) : (
+                        <div className="text-center py-12 text-brand-green-dark/40 font-black italic text-sm">
+                            No TX2 data available
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* Export Section */}
+            <div className="flex flex-col items-center justify-center min-h-[50vh]">
             <div className="glass-thick p-10 md:p-12 md:rounded-[50px] rounded-[35px] w-full max-w-lg shadow-2xl border-none relative overflow-hidden bg-white/60 backdrop-blur-3xl">
                 <div className="absolute inset-0 grid-overlay opacity-5 -z-10" />
 
@@ -200,6 +288,7 @@ export default function ReportsPage() {
                 <div className="mt-12 text-center opacity-20">
                     <p className="text-[8px] font-black uppercase tracking-[0.6em]">CarbonX Enterprise</p>
                 </div>
+            </div>
             </div>
         </div>
     );

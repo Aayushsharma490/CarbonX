@@ -159,8 +159,8 @@ export class RateLimiter {
 
 // ─── Pre-built instances ──────────────────────────────────────────────────────
 
-/** Singleton rate limiter for the notification system (5s cooldown) */
-export const notificationRateLimiter = new RateLimiter(5000);
+/** Singleton rate limiter for the notification system (3s cooldown for simulation) */
+export const notificationRateLimiter = new RateLimiter(3000);
 
 /** Singleton rate limiter for energy calculation triggers (500ms debounce
  *  is handled differently — use debounce() for calculations, not this) */

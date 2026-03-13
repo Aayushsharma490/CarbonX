@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { X, AlertTriangle, Info, Zap } from 'lucide-react';
+import { X, AlertTriangle, Info, Zap, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useEnergyNotifications } from '@/hooks/useEnergyNotifications';
+import { useGlobalNotifications } from '@/context/NotificationContext';
 import type { EnergyNotification, NotificationSeverity } from '@/types/energy';
 
 // ─── Individual Notification Toast ───────────────────────────────────────────
@@ -18,15 +18,16 @@ function NotificationToast({
     const isCritical = notification.severity === 'critical';
 
     const iconMap: Record<NotificationSeverity, React.ReactNode> = {
-        info: <Info size={16} className="text-blue-400 flex-shrink-0 mt-0.5" />,
-        warning: <AlertTriangle size={16} className="text-brand-yellow flex-shrink-0 mt-0.5" />,
-        critical: <Zap size={16} className="text-red-400 flex-shrink-0 mt-0.5 animate-pulse" />,
+        info: <Info size={18} className="text-white flex-shrink-0" />,
+        warning: <AlertTriangle size={18} className="text-white flex-shrink-0" />,
+        critical: <Shield size={20} className="text-white flex-shrink-0 animate-bounce" />,
     };
 
+    // HIGH IMPACT STYLING (User requested: Dark background, White text, Red/Black Highlights)
     const containerClasses: Record<NotificationSeverity, string> = {
-        info: 'border-blue-500/30 bg-blue-500/10',
-        warning: 'border-brand-yellow/40 bg-brand-yellow/10',
-        critical: 'border-red-500/60 bg-red-500/15 glow-red ring-1 ring-red-500/30',
+        info: 'bg-zinc-900 border-zinc-700 text-white shadow-[0_0_15px_rgba(0,0,0,0.5)]',
+        warning: 'bg-orange-950 border-orange-500 text-white shadow-[0_0_15px_rgba(249,115,22,0.5)]',
+        critical: 'bg-red-950 border-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.7)] ring-2 ring-red-600 ring-offset-2 ring-offset-black',
     };
 
     return (
@@ -35,123 +36,86 @@ function NotificationToast({
             role="alert"
             aria-live={isCritical ? 'assertive' : 'polite'}
             className={cn(
-                'flex items-start gap-3 p-3 rounded-xl border backdrop-blur-sm',
-                'text-brand-white text-sm fade-in',
+                'flex items-center gap-3 p-3 rounded-xl border-2 backdrop-blur-md',
+                'sm:gap-4 sm:p-4 sm:rounded-2xl',
+                'animate-in slide-in-from-right duration-300 hover:scale-[1.02]',
+                'w-full max-w-full overflow-hidden',
                 containerClasses[notification.severity]
             )}
         >
-            {iconMap[notification.severity]}
+            <div className={cn(
+                "p-1.5 sm:p-2 rounded-lg flex items-center justify-center flex-shrink-0",
+                isCritical ? "bg-red-600 animate-pulse" : "bg-white/10"
+            )}>
+                {iconMap[notification.severity]}
+            </div>
 
-            <div className="flex-1 min-w-0">
-                <div className="font-semibold leading-tight">{notification.title}</div>
-                <div className="text-brand-white/70 text-xs mt-0.5 leading-relaxed">
+            <div className="flex-1 min-w-0 overflow-hidden">
+                <div className="font-bold text-xs sm:text-sm tracking-wide uppercase truncate">
+                    {notification.title}
+                </div>
+                <div className="text-white/80 text-[10px] sm:text-[11px] font-medium mt-1 uppercase line-clamp-2">
                     {notification.message}
                 </div>
-                {notification.lossPercent !== undefined && (
-                    <div className="text-xs mt-1 font-mono text-brand-white/50">
-                        Loss: {notification.lossPercent.toFixed(1)}%
-                    </div>
-                )}
             </div>
 
             <button
                 onClick={() => onDismiss(notification.id)}
                 aria-label="Dismiss notification"
-                className="flex-shrink-0 text-brand-white/40 hover:text-brand-white/80 transition-colors cursor-pointer"
+                className="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/80 text-white transition-all cursor-pointer"
             >
-                <X size={14} />
+                <X size={14} className="sm:w-4 sm:h-4" />
             </button>
         </div>
     );
 }
 
-// ─── Critical Alert Banner (Task 7.2) ─────────────────────────────────────────
-
-function CriticalAlertBanner({ count }: { count: number }) {
-    if (count === 0) return null;
-
-    return (
-        <div
-            id="critical-alert-banner"
-            role="alert"
-            aria-live="assertive"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl
-                 bg-red-500/20 border border-red-500/50 backdrop-blur-sm
-                 ring-1 ring-red-500/30"
-        >
-            <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
-                <span className="font-bold text-red-400 text-sm">
-                    ⚡ CRITICAL ALERT — {count} critical energy loss event{count > 1 ? 's' : ''} detected
-                </span>
-            </div>
-            <span className="text-brand-white/60 text-xs ml-auto">Requires immediate action</span>
-        </div>
-    );
-}
-
-// ─── Notification Panel ────────────────────────────────────────────────────────
-
-interface NotificationPanelProps {
-    className?: string;
-}
-
-export function NotificationPanel({ className }: NotificationPanelProps) {
-    const { activeNotifications, criticalCount, dismiss, dismissAll } = useEnergyNotifications();
-
-    if (activeNotifications.length === 0) return null;
-
-    return (
-        <div
-            id="notification-panel"
-            className={cn('flex flex-col gap-2', className)}
-            aria-label="Energy monitoring notifications"
-        >
-            {/* Critical banner at top */}
-            <CriticalAlertBanner count={criticalCount} />
-
-            {/* Notification list */}
-            <div className="flex flex-col gap-2 max-h-80 overflow-y-auto pr-1 scrollbar-thin">
-                {activeNotifications.map((n) => (
-                    <NotificationToast key={n.id} notification={n} onDismiss={dismiss} />
-                ))}
-            </div>
-
-            {/* Dismiss all */}
-            {activeNotifications.length > 1 && (
-                <button
-                    id="dismiss-all-notifications"
-                    onClick={dismissAll}
-                    className="text-xs text-brand-white/40 hover:text-brand-white/70
-                     transition-colors self-end cursor-pointer"
-                >
-                    Dismiss all ({activeNotifications.length})
-                </button>
-            )}
-        </div>
-    );
-}
-
-// ─── Floating Notification Overlay (fixed position) ───────────────────────────
+// ─── Notification Overlay ──────────────────────────────────────────────────
 
 export function NotificationOverlay() {
-    const { activeNotifications, criticalCount, dismiss } = useEnergyNotifications();
+    const { activeNotifications, criticalCount, dismiss } = useGlobalNotifications();
 
     if (activeNotifications.length === 0) return null;
-
-    // Show max 3 toasts in the overlay
-    const visibleNotifications = activeNotifications.slice(0, 3);
 
     return (
         <div
             id="notification-overlay"
-            className="fixed top-20 right-4 z-[90] flex flex-col gap-2 w-80"
-            aria-label="Live energy alerts"
+            className={cn(
+                "fixed z-[100000] flex flex-col gap-3 transition-all duration-500",
+                "bottom-4 left-4 right-4 max-w-full",
+                "sm:bottom-6 sm:left-6 sm:right-6",
+                "md:bottom-auto md:top-24 md:right-8 md:left-auto md:w-[420px] md:max-w-[90vw]",
+                "lg:w-[480px]"
+            )}
+            aria-label="Live system alerts"
         >
-            {criticalCount > 0 && <CriticalAlertBanner count={criticalCount} />}
-            {visibleNotifications.map((n) => (
+            {activeNotifications.slice(0, 5).map((n) => (
                 <NotificationToast key={n.id} notification={n} onDismiss={dismiss} />
             ))}
+        </div>
+    );
+}
+
+export function NotificationPanel({ className }: { className?: string }) {
+    const { activeNotifications, dismiss, dismissAll } = useGlobalNotifications();
+
+    if (activeNotifications.length === 0) return null;
+
+    return (
+        <div id="notification-panel" className={cn('flex flex-col gap-4', className)}>
+            <div className="flex flex-col gap-3">
+                {activeNotifications.map((n) => (
+                    <NotificationToast key={n.id} notification={n} onDismiss={dismiss} />
+                ))}
+            </div>
+            {activeNotifications.length > 1 && (
+                <button
+                    onClick={() => dismissAll()}
+                    className="text-[10px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-colors py-2 px-4 bg-red-900/40 rounded-lg border border-red-500/50"
+                >
+                    CLEAR ALL PROTOCOL MESSAGES
+                </button>
+            )}
         </div>
     );
 }
