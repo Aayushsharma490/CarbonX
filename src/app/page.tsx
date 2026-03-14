@@ -160,8 +160,8 @@ function HeroSection() {
       <div className="absolute inset-0 grid-overlay opacity-40 -z-20" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-7xl aspect-square bg-brand-green-light/5 blur-[140px] rounded-full pointer-events-none -z-10" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1.4fr,0.6fr] gap-10 items-center w-full max-w-[90rem] mx-auto relative z-10 px-6 lg:px-20">
-        <div className="space-y-10 text-center lg:text-left z-20 lg:pr-20">
+      <div className="flex flex-col items-center w-full max-w-7xl mx-auto relative z-10 px-6">
+        <div className="space-y-10 text-center z-20">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -179,16 +179,16 @@ function HeroSection() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.8 }}
-              className="text-6xl sm:text-7xl xl:text-8xl 2xl:text-9xl font-black text-brand-green-dark tracking-tighter uppercase italic leading-[0.8] text-glow"
+              className="text-5xl sm:text-6xl xl:text-7xl 2xl:text-8xl font-black text-brand-green-dark tracking-tighter uppercase italic leading-[0.85] text-glow"
             >
               Industrial <br />
-              <span className="text-brand-green-light underline decoration-[12px] underline-offset-[12px]">Intelligence</span>
+              <span className="text-brand-green-light underline decoration-[10px] underline-offset-[10px]">Intelligence</span>
             </motion.h1>
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="text-lg md:text-xl text-brand-green-dark/50 font-medium max-w-xl mx-auto lg:mx-0 leading-relaxed"
+              className="text-base md:text-lg text-brand-green-dark/50 font-medium max-w-xl mx-auto leading-relaxed"
             >
               Monitor every watt, detect every anomaly, and optimize your entire plant with one unified AI dashboard.
             </motion.p>
@@ -198,41 +198,14 @@ function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-5"
+            className="flex flex-col sm:flex-row items-center justify-center gap-5"
           >
             <Link href={isAuthenticated ? "/dashboard" : "/login"}>
-              <Button className="h-20 px-12 rounded-[2rem] bg-brand-green-dark text-white hover:bg-brand-green-dark/95 text-xl font-black uppercase italic tracking-widest gap-4 shadow-2xl shadow-brand-green-dark/30 group border-b-4 border-black/20 transform active:translate-y-1 transition-all">
+              <Button className="h-16 px-10 rounded-[1.8rem] bg-brand-green-dark text-white hover:bg-brand-green-dark/95 text-lg font-black uppercase italic tracking-widest gap-4 shadow-2xl shadow-brand-green-dark/30 group border-b-4 border-black/20 transform active:translate-y-1 transition-all">
                 {isAuthenticated ? "Enter Command" : "Get Started"}
                 <ArrowRight className="group-hover:translate-x-3 transition-transform" />
               </Button>
             </Link>
-          </motion.div>
-        </div>
-
-        {/* Device Image Showcase */}
-        <div className="relative h-[400px] lg:h-[600px] flex flex-col items-center justify-center group z-10 w-full">
-          <div className="absolute inset-0 bg-brand-green-light/5 blur-[100px] rounded-full scale-75 animate-pulse" />
-
-          <motion.div
-            initial={{ opacity: 0, x: 100, scale: 0.8 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={{ type: "spring", stiffness: 80 }}
-            className="w-full max-w-sm lg:max-w-md aspect-square glass-thick md:rounded-[60px] rounded-[40px] border border-white flex items-center justify-center relative shadow-2xl overflow-hidden"
-          >
-            <div className="absolute inset-0 dot-pattern opacity-10" />
-            <div className="absolute top-6 left-6 p-2 glass rounded-xl border-white/40">
-              <div className="w-1.5 h-1.5 rounded-full bg-brand-green-light animate-ping" />
-            </div>
-
-            <div className="relative z-10 w-full h-full p-8 transition-transform duration-700 group-hover:scale-110">
-              <Image
-                src="/image.png"
-                alt="CarbonX Edge Node"
-                fill
-                className="object-contain p-4 drop-shadow-2xl"
-                priority
-              />
-            </div>
           </motion.div>
         </div>
       </div>

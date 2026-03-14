@@ -9,7 +9,7 @@ Modern industrial environments face three critical challenges:
 - **Unscheduled Downtime**: Equipment failures (like motor burnouts) are often caused by undetected 3-phase imbalances, overheating, or power factor degradation.
 - **Reporting Complexity**: With increasing global pressure for "Net-Zero" compliance, manually tracking and reporting CO2 emissions from complex factory grids is error-prone and labor-intensive.
 
-## 3. Target Audience
+## 3. Target Audience 
 - **Factory Managers**: To optimize operational efficiency and reduce energy costs.
 - **Maintenance Engineers**: For predictive maintenance and hardware longevity.
 - **Sustainability (ESG) Officers**: To track and report real-time carbon emissions and manage offset goals.
