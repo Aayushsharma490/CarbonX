@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import {
     Activity, Zap, Leaf, AlertTriangle,
     TrendingUp, TrendingDown, RefreshCw, Server,
-    Thermometer, Wind, Gauge
+    Thermometer, Wind, Gauge, Sparkles
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid,
@@ -116,6 +116,27 @@ function MachineCard({ node }: { node: any }) {
                         <div className="text-sm font-bold text-gray-800 mt-0.5">{value}</div>
                     </div>
                 ))}
+            </div>
+
+            {/* AI Insights Section */}
+            <div className="mt-4 pt-4 border-t border-gray-50">
+                <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500">
+                        <Sparkles size={14} className="text-purple-500" /> AI Insights
+                    </div>
+                    <div className={cn(
+                        "text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider",
+                        !node.isOnline ? "text-gray-500 bg-gray-50 border-gray-200"
+                        : health.score >= 75 ? "text-green-600 bg-green-50 border-green-100" 
+                        : "text-amber-600 bg-amber-50 border-amber-100"
+                    )}>
+                        {!node.isOnline ? "Offline" : health.score >= 75 ? "Working Fine" : "Needs Attention"}
+                    </div>
+                </div>
+                <div className="flex items-center justify-between bg-purple-50/50 p-2.5 rounded-xl border border-purple-100/50">
+                    <span className="text-xs font-medium text-purple-700/70">Est. Maintenance</span>
+                    <span className="text-xs font-bold text-purple-700">In {Math.floor(health.score / 5)} Days</span>
+                </div>
             </div>
         </div>
     );
