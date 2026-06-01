@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSystem } from '@/context/SystemContext';
 import { useTelemetry } from '@/context/TelemetryContext';
 import { GaugeChart } from '@/components/GaugeChart';
-import { Tabs, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Activity, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { calculateMachineHealth, getStatusColor } from '@/lib/energyCalculations';
@@ -48,7 +48,7 @@ export default function MachinesPage() {
 
             {/* Zone Tabs */}
             <Tabs value={activeZone} onValueChange={setActiveZone} className="w-full">
-                <div className="flex items-center gap-1 p-1 bg-gray-100 rounded-xl w-fit flex-wrap mb-5">
+                <TabsList className="flex items-center gap-1 p-1 bg-gray-100 rounded-xl w-fit flex-wrap mb-5 h-auto">
                     {ZONES.map(zone => (
                         <TabsTrigger
                             key={zone}
@@ -62,7 +62,7 @@ export default function MachinesPage() {
                             {zone}
                         </TabsTrigger>
                     ))}
-                </div>
+                </TabsList>
 
                 {ZONES.map(zone => (
                     <TabsContent key={zone} value={zone}>
