@@ -4,11 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useSystem } from '@/context/SystemContext';
 import { useTelemetry } from '@/context/TelemetryContext';
 import { GaugeChart } from '@/components/GaugeChart';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Activity, ShieldCheck, Zap, Thermometer, Info, Wind, HeartPulse } from 'lucide-react';
-import type { TXEnergyUnit } from '@/types/energy';
+import { Tabs, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Activity, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { calculateMachineHealth, getStatusColor } from '@/lib/energyCalculations';
 
@@ -25,144 +22,134 @@ export default function MachinesPage() {
         if (ZONES.length > 0 && !activeZone) setActiveZone(ZONES[0]);
     }, [ZONES, activeZone]);
 
-    if (!mounted || loading) return <div className="p-20 text-center">Loading Machine Health...</div>;
+    if (!mounted || loading) return (
+        <div className="flex items-center justify-center py-32 text-gray-400 font-medium gap-3">
+            <RefreshCw size={18} className="animate-spin" />
+            Loading machine data…
+        </div>
+    );
 
     const filteredMachines = nodeData.filter(m => m.zone === activeZone);
 
     return (
-        <div className="fade-in space-y-8 pb-20">
-            {/* Header Area */}
-            <div className="glass-thick p-6 md:p-10 md:rounded-[50px] rounded-[35px] flex flex-col lg:flex-row justify-between items-start lg:items-center shadow-sm relative group">
-                <div className="absolute inset-0 grid-overlay opacity-10 -z-10 rounded-[inherit] overflow-hidden" />
-                <div className="relative z-10 space-y-2">
-                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter italic uppercase text-brand-green-dark flex items-center gap-4">
-                        <Activity className="text-brand-green-light" size={36} />
-                        Machine Health
-                    </h1>
-                    <p className="text-brand-green-dark/60 font-medium text-sm md:text-base">Real-time telemetry and gauge monitoring across plant zones.</p>
+        <div className="fade-in space-y-6 pb-10">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="page-title">Machine Health</h1>
+                    <p className="text-sm text-gray-500 mt-1">
+                        Real-time health scores, gauges, temperature and vibration data across all zones.
+                    </p>
                 </div>
-
-                <div className="mt-8 lg:mt-0 flex gap-4 relative z-10">
-                    <div className="glass-thick bg-brand-green-light/10 border-brand-green-light/20 px-8 py-4 rounded-3xl shadow-sm">
-                        <div className="text-[10px] font-black opacity-40 uppercase tracking-[0.3em] text-brand-green-dark">Nodes Operational</div>
-                        <div className="text-3xl font-black text-brand-green-dark italic">{filteredMachines.length} <span className="text-sm opacity-40 uppercase">/ {nodeData.length} Total</span></div>
-                    </div>
+                <div className="px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-full text-sm font-medium text-gray-500 shrink-0">
+                    {nodeData.filter(n => n.isOnline).length}/{nodeData.length} Online
                 </div>
-
-                {/* Background Decor */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-brand-green-light/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2" />
             </div>
 
-            {/* Zone Filter Tabs */}
+            {/* Zone Tabs */}
             <Tabs value={activeZone} onValueChange={setActiveZone} className="w-full">
-                <TabsList className="bg-transparent h-auto p-0 gap-4 flex-wrap">
+                <div className="flex items-center gap-1 p-1 bg-gray-100 rounded-xl w-fit flex-wrap mb-5">
                     {ZONES.map(zone => (
                         <TabsTrigger
                             key={zone}
                             value={zone}
                             className={cn(
-                                "px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300",
-                                "data-[state=active]:bg-brand-green-dark data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:shadow-brand-green-dark/20",
-                                "data-[state=inactive]:bg-white/50 data-[state=inactive]:text-brand-green-dark/40 data-[state=inactive]:hover:bg-white"
+                                'px-4 py-2 rounded-lg text-sm font-medium transition-all',
+                                'data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm',
+                                'data-[state=inactive]:text-gray-500 data-[state=inactive]:hover:text-gray-700'
                             )}
                         >
                             {zone}
                         </TabsTrigger>
                     ))}
-                </TabsList>
+                </div>
 
                 {ZONES.map(zone => (
-                    <TabsContent key={zone} value={zone} className="mt-8">
-                        <div className="grid grid-cols-1 gap-8">
-                                    {filteredMachines.length > 0 ? (
-                                        filteredMachines.map(machine => {
-                                            const health = calculateMachineHealth(machine);
-                                            const statusColor = getStatusColor(health.status);
+                    <TabsContent key={zone} value={zone}>
+                        <div className="grid grid-cols-1 gap-5">
+                            {filteredMachines.length > 0 ? (
+                                filteredMachines.map(machine => {
+                                    const health = calculateMachineHealth(machine);
+                                    const statusColor = getStatusColor(health.status);
+                                    const statusLabel = !machine.isOnline ? 'Offline'
+                                        : health.score >= 80 ? 'Good'
+                                        : health.score >= 60 ? 'Warning' : 'Critical';
 
-                                            return (
-                                                <Card key={machine.nodeId} className="glass-card border-none overflow-hidden hover:shadow-2xl transition-all duration-500 md:rounded-[35px] rounded-3xl">
-                                                    <CardHeader className="bg-brand-green-dark/[0.02] border-b border-black/5 p-6">
-                                                        <div className="flex justify-between items-center">
-                                                            <div>
-                                                                <CardTitle className="text-2xl font-black text-brand-green-dark flex items-center gap-3">
-                                                                    <div className="w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: statusColor }} />
-                                                                    {machine.name}
-                                                                </CardTitle>
-                                                                <Badge variant="outline" className="mt-2 bg-white/50 border-black/5 text-[10px] font-black uppercase">
-                                                                    ID: {machine.nodeId} • {machine.phaseType} Phase
-                                                                </Badge>
-                                                            </div>
-                                                            <div className="text-right">
-                                                                <div className="text-[10px] font-black opacity-40 uppercase tracking-widest">AI Health Score</div>
-                                                                <div className="text-2xl font-black" style={{ color: statusColor }}>{health.score}%</div>
-                                                            </div>
-                                                        </div>
-                                                    </CardHeader>
-                                                    <CardContent className="p-8">
-                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                                                            {/* Gauge 1: Power */}
-                                                            <GaugeChart
-                                                                label={`${machine.zone} Power`}
-                                                                value={machine.currentKw}
-                                                                max={machine.targetKw * 1.5}
-                                                                unit="kW"
-                                                            />
+                                    return (
+                                        <div
+                                            key={machine.nodeId}
+                                            className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:border-gray-200 hover:shadow-md transition-all"
+                                        >
+                                            {/* Card header */}
+                                            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-50">
+                                                <div className="flex items-center gap-3">
+                                                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: statusColor }} />
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900">{machine.name}</div>
+                                                        <div className="text-xs text-gray-400">{machine.nodeId} · {machine.phaseType}-phase</div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="text-right hidden sm:block">
+                                                        <div className="text-xs text-gray-400">Health Score</div>
+                                                        <div className="font-bold" style={{ color: statusColor }}>{health.score}%</div>
+                                                    </div>
+                                                    <span className={cn(
+                                                        'px-3 py-1 rounded-full text-xs font-semibold',
+                                                        !machine.isOnline ? 'bg-gray-100 text-gray-500'
+                                                        : health.score >= 80 ? 'bg-green-50 text-green-700'
+                                                        : health.score >= 60 ? 'bg-amber-50 text-amber-700'
+                                                        : 'bg-red-50 text-red-700'
+                                                    )}>
+                                                        {statusLabel}
+                                                    </span>
+                                                </div>
+                                            </div>
 
-                                                            {/* Gauge 2: Current */}
-                                                            <GaugeChart
-                                                                label={`${machine.zone} Current`}
-                                                                value={machine.phaseCurrents[0]}
-                                                                max={100}
-                                                                unit="Amps"
-                                                            />
+                                            {/* Gauges */}
+                                            <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+                                                <GaugeChart
+                                                    label="Active Power"
+                                                    value={machine.currentKw}
+                                                    max={machine.targetKw * 1.5}
+                                                    unit="kW"
+                                                />
+                                                <GaugeChart
+                                                    label="Phase Current"
+                                                    value={machine.phaseCurrents[0]}
+                                                    max={100}
+                                                    unit="Amps"
+                                                />
+                                                <GaugeChart
+                                                    label="Phase Voltage"
+                                                    value={machine.phaseVoltages[0]}
+                                                    max={500}
+                                                    unit="Volts"
+                                                />
+                                            </div>
 
-                                                            {/* Gauge 3: Voltage */}
-                                                            <GaugeChart
-                                                                label={`${machine.zone} Voltage`}
-                                                                value={machine.phaseVoltages[0]}
-                                                                max={500}
-                                                                unit="Volts"
-                                                            />
-                                                        </div>
-
-                                                        {/* Machine Details Footer */}
-                                                        <div className="mt-12 grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 md:rounded-3xl rounded-2xl bg-black/5">
-                                                            <div className="p-4 border-r border-black/5">
-                                                                <div className="flex items-center gap-2 text-[10px] font-black opacity-40 uppercase mb-1">
-                                                                    <HeartPulse size={14} className="text-brand-green-light" /> Load Profile
-                                                                </div>
-                                                                <div className="font-black text-brand-green-dark">{(machine.powerFactor * 100).toFixed(0)}% <span className="text-[10px] opacity-40 uppercase">Eff</span></div>
-                                                            </div>
-                                                            <div className="p-4 border-r border-black/5">
-                                                                <div className="flex items-center gap-2 text-[10px] font-black opacity-40 uppercase mb-1">
-                                                                    <Wind size={14} className="text-brand-yellow" /> Carbon Drift
-                                                                </div>
-                                                                <div className="font-black text-brand-green-dark">{machine.ppm} <span className="text-[10px] opacity-40">PPM</span></div>
-                                                            </div>
-                                                            <div className="p-4 border-r border-black/5">
-                                                                <div className="flex items-center gap-2 text-[10px] font-black opacity-40 uppercase mb-1">
-                                                                    <Thermometer size={14} className="text-blue-500" /> Operating Temp
-                                                                </div>
-                                                                <div className="font-black text-brand-green-dark">{machine.temperature.toFixed(1)}°C</div>
-                                                            </div>
-                                                            <div className="p-4">
-                                                                <div className="flex items-center gap-2 text-[10px] font-black opacity-40 uppercase mb-1">
-                                                                    <Zap size={14} className="text-orange-500" /> Vibration
-                                                                </div>
-                                                                <div className="font-black text-brand-green-dark">{machine.vibration.toFixed(2)} <span className="text-[10px] opacity-40">mm/s</span></div>
-                                                            </div>
-                                                        </div>
-                                                    </CardContent>
-                                                </Card>
-                                            );
-                                        })
+                                            {/* Metrics strip */}
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 border-t border-gray-50">
+                                                {[
+                                                    { label: 'Power Factor', value: `${(machine.powerFactor * 100).toFixed(0)}%` },
+                                                    { label: 'CO₂ Level',    value: `${machine.ppm} PPM` },
+                                                    { label: 'Temperature',  value: `${machine.temperature.toFixed(1)}°C` },
+                                                    { label: 'Vibration',    value: `${machine.vibration.toFixed(2)} mm/s` },
+                                                ].map(({ label, value }, j) => (
+                                                    <div key={j} className={cn('p-4', j < 3 && 'border-r border-gray-50')}>
+                                                        <div className="text-xs text-gray-400 font-medium mb-1">{label}</div>
+                                                        <div className="font-semibold text-gray-800">{value}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })
                             ) : (
-                                <div className="glass p-20 md:rounded-[40px] rounded-3xl text-center border-none shadow-sm">
-                                    <div className="w-20 h-20 bg-brand-green-light/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                                        <Activity className="text-brand-green-light/40" size={40} />
-                                    </div>
-                                    <h3 className="text-2xl font-black text-brand-green-dark mb-2">No Machines Detected</h3>
-                                    <p className="text-brand-green-dark/40 font-medium">There are no TX nodes assigned to {zone} in the system config.</p>
+                                <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl border border-gray-100">
+                                    <Activity size={36} className="text-gray-300 mb-4" />
+                                    <div className="font-semibold text-gray-600">No machines in this zone</div>
+                                    <p className="text-sm text-gray-400 mt-1">No devices assigned to {zone} yet.</p>
                                 </div>
                             )}
                         </div>

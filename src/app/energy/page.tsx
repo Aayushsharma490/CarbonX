@@ -6,9 +6,8 @@ import { useTelemetry } from '@/context/TelemetryContext';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import {
-    Zap, Activity, ShieldAlert, Cpu,
-    ArrowRightLeft, Gauge, Waves, Info
+import { Zap, Activity, ShieldAlert, Cpu,
+    ArrowRightLeft, Gauge, Waves, Info, RefreshCw
 } from 'lucide-react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -17,7 +16,6 @@ import {
 } from 'recharts';
 import { cn } from '@/lib/utils';
 import { calculateEnergyLoss, calculateMachineHealth, getStatusColor } from '@/lib/energyCalculations';
-import { FormulaIntelligence } from '@/components/FormulaIntelligence';
 
 const COLORS = ['#10b981', '#fb923c', '#3b82f6'];
 
@@ -30,8 +28,13 @@ export default function EnergyMonitorPage() {
         setMounted(true);
     }, []);
 
-    if (!mounted || loading) return <div className="p-20 text-center">Loading Energy Controls...</div>;
-    if (!gatewayData) return <div className="p-20 text-center text-brand-green-dark/40">Waiting for Grid Sync...</div>;
+    if (!mounted || loading) return (
+        <div className="flex items-center justify-center py-32 text-gray-400 gap-3">
+            <RefreshCw size={18} className="animate-spin" />
+            Loading energy data…
+        </div>
+    );
+    if (!gatewayData) return <div className="text-center py-32 text-gray-400">Waiting for data…</div>;
 
     // Real Data Calculations
     const gateway = gatewayData;
@@ -54,97 +57,63 @@ export default function EnergyMonitorPage() {
     ];
 
     return (
-        <div className="fade-in space-y-8 pb-20">
-            {/* Energy Header */}
-            <div className="glass p-8 md:rounded-[40px] rounded-3xl flex flex-col md:flex-row justify-between items-center shadow-sm border border-brand-green-light/10">
-                <div className="flex items-center gap-6">
-                    <div className="w-20 h-20 md:rounded-3xl rounded-2xl bg-brand-green-light/10 flex items-center justify-center border border-brand-green-light/20 shadow-inner">
-                        <Zap className="text-brand-green-light" size={40} />
-                    </div>
-                    <div>
-                        <div className="flex items-center gap-3">
-                            <h1 className="text-4xl font-black tracking-tight text-brand-green-dark">Energy Control</h1>
-                            <FormulaIntelligence />
-                        </div>
-                        <p className="text-brand-green-dark/60 font-medium">Real-time Phase Distribution & Transmission Quality.</p>
-                    </div>
+        <div className="fade-in space-y-6 pb-10">
+            {/* Page Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="page-title">Energy Monitor</h1>
+                    <p className="text-sm text-gray-500 mt-1">Real-time phase distribution, power factor, and transmission quality.</p>
                 </div>
-                <div className="mt-6 md:mt-0 flex gap-4">
-                    <div className="glass flex items-center gap-4 px-6 py-3 rounded-2xl border-none">
-                        <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-sm font-black text-brand-green-dark">GRID SYNC: 50.02 Hz</span>
-                    </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-100 rounded-full text-sm font-medium text-green-700 shrink-0">
+                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                    Grid Sync: 50.02 Hz
                 </div>
             </div>
 
-            {/* Control Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="glass-card theme-mint border-none p-6 md:rounded-[35px] rounded-3xl relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <div className="text-[10px] font-black opacity-40 uppercase tracking-widest mb-1">Total Plant Load</div>
-                    <div className="flex items-baseline gap-2">
-                        <div className="text-3xl font-black text-emerald-950 drop-shadow-[0_0_10px_rgba(16,185,129,0.3)]">{totalKw.toFixed(1)}</div>
-                        <span className="text-lg font-black opacity-20">kW</span>
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-all">
+                    <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Total Plant Load</div>
+                    <div className="text-3xl font-bold text-gray-900">{totalKw.toFixed(1)}<span className="text-base font-normal text-gray-400 ml-1">kW</span></div>
+                    <div className="flex items-center gap-1.5 mt-3 text-xs font-medium text-green-600">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />Live
                     </div>
-                    <div className="mt-4 flex items-center gap-2 text-emerald-700/60 font-bold text-[10px] uppercase">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-                        Live Grid Sync
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-all">
+                    <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Line Loss</div>
+                    <div className="text-3xl font-bold text-gray-900">{lossPercent.toFixed(1)}<span className="text-base font-normal text-gray-400 ml-1">%</span></div>
+                    <div className="h-1.5 w-full bg-gray-100 rounded-full mt-3 overflow-hidden">
+                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(lossPercent, 100)}%` }} />
                     </div>
-                </Card>
-
-                <Card className="glass-card theme-blue border-none p-6 md:rounded-[35px] rounded-3xl relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <div className="text-[10px] font-black opacity-40 uppercase tracking-widest mb-1">Transmission Loss</div>
-                    <div className="flex items-baseline gap-2">
-                        <div className="text-3xl font-black text-blue-950 drop-shadow-[0_0_10px_rgba(59,130,246,0.3)]">{lossPercent.toFixed(1)}</div>
-                        <span className="text-lg font-black opacity-20">%</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-blue-950/5 rounded-full mt-4 overflow-hidden">
-                        <div
-                            className="h-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] transition-all duration-1000"
-                            style={{ width: `${lossPercent}%` }}
-                        />
-                    </div>
-                </Card>
-
-                <Card className="glass-card theme-peach border-none p-6 md:rounded-[35px] rounded-3xl relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <div className="text-[10px] font-black opacity-40 uppercase tracking-widest mb-1">Power Factor</div>
-                    <div className="flex items-baseline gap-2">
-                        <div className="text-3xl font-black text-orange-950 drop-shadow-[0_0_10px_rgba(249,146,60,0.3)]">{livePF.toFixed(2)}</div>
-                        <span className="text-lg font-black opacity-20">Lag</span>
-                    </div>
-                    <div className="mt-4 flex items-center gap-2 text-orange-700/60 font-bold text-[10px] uppercase">
-                        <Cpu size={12} className="animate-spin-slow" /> Optimized Phase
-                    </div>
-                </Card>
-
-                <Card className="glass-card theme-yellow border-none p-6 md:rounded-[35px] rounded-3xl relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-yellow-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <div className="text-[10px] font-black opacity-40 uppercase tracking-widest mb-1">Average Voltage</div>
-                    <div className="flex items-baseline gap-2">
-                        <div className="text-3xl font-black text-yellow-950 drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]">{liveVoltage.toFixed(0)}</div>
-                        <span className="text-lg font-black opacity-20">V</span>
-                    </div>
-                    <div className="mt-4 flex items-center gap-2 text-yellow-700/60 font-bold text-[10px] uppercase">
-                        <ShieldAlert size={12} className="animate-pulse" /> Stable Range
-                    </div>
-                </Card>
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-all">
+                    <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Power Factor</div>
+                    <div className="text-3xl font-bold text-gray-900">{livePF.toFixed(2)}<span className="text-base font-normal text-gray-400 ml-1">PF</span></div>
+                    <div className="text-xs text-gray-400 mt-3">Optimised phase balance</div>
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-all">
+                    <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Average Voltage</div>
+                    <div className="text-3xl font-bold text-gray-900">{liveVoltage.toFixed(0)}<span className="text-base font-normal text-gray-400 ml-1">V</span></div>
+                    <div className="text-xs text-gray-400 mt-3">Within stable range</div>
+                </div>
             </div>
 
             {/* Analysis Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Phase Balancing Chart */}
-                <Card className="glass-card lg:col-span-2 p-8 md:rounded-[40px] rounded-3xl">
-                    <div className="flex justify-between items-center mb-10">
-                        <h2 className="text-2xl font-black text-brand-green-dark tracking-tight">Phase Balancing (RX Gateway)</h2>
+                <div className="bg-white rounded-2xl border border-gray-100 p-6 lg:col-span-2">
+                    <div className="flex justify-between items-center mb-6">
+                        <div>
+                            <div className="section-title">Phase Balance (L1 / L2 / L3)</div>
+                            <div className="text-sm text-gray-400 mt-0.5">Current per phase over time (Amps)</div>
+                        </div>
                         <div className="flex gap-2">
-                            <Badge className="bg-emerald-500 text-white font-black text-[10px]">L1</Badge>
-                            <Badge className="bg-orange-500 text-white font-black text-[10px]">L2</Badge>
-                            <Badge className="bg-blue-500 text-white font-black text-[10px]">L3</Badge>
+                            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">L1</span>
+                            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-orange-700">L2</span>
+                            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">L3</span>
                         </div>
                     </div>
-                    <div className="h-[350px] pb-10 px-6">
+                    <div className="h-72 mt-2">
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={[
                                 { name: 'T-20m', L1: (gateway.current / 3) * 0.98, L2: (gateway.current / 3) * 1.02, L3: (gateway.current / 3) * 1.05 },
@@ -226,56 +195,45 @@ export default function EnergyMonitorPage() {
                             </LineChart>
                         </ResponsiveContainer>
                     </div>
-                    <div className="mt-8 flex justify-center gap-12 font-black text-[10px] tracking-widest text-brand-green-dark/40 uppercase">
-                        <div className="flex flex-col items-center gap-1">
-                            <span className="text-brand-green-dark">Current Balance</span>
-                            <span className="text-emerald-600">98.2% Optimized</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-1">
-                            <span className="text-brand-green-dark">Voltage Deviation</span>
-                            <span className="text-blue-600">± 1.2 Volts</span>
-                        </div>
+                    <div className="mt-4 flex gap-8 text-sm text-gray-500">
+                        <span>Current Balance: <strong className="text-green-600">98.2% Optimized</strong></span>
+                        <span>Voltage Deviation: <strong className="text-blue-600">± 1.2 V</strong></span>
                     </div>
-                </Card>
+                </div>
 
                 {/* Efficiency Stats */}
-                <div className="space-y-6">
-                    <Card className="glass-card theme-blue p-8 border-none flex flex-col items-center text-center md:rounded-[35px] rounded-3xl">
-                        <Gauge className="text-blue-700 mb-4" size={40} />
-                        <h3 className="text-lg font-black text-blue-900 uppercase tracking-widest">Load Factor</h3>
-                        <div className="text-5xl font-black text-blue-950 my-2">{loadFactor.toFixed(2)}</div>
-                        <p className="text-[10px] font-black opacity-40 text-blue-900 leading-tight uppercase px-4">
-                            Ideal load factor maintained to prevent equipment heat-stress.
-                        </p>
-                    </Card>
-
-                    <Card className="glass-card theme-peach p-8 border-none flex flex-col items-center text-center md:rounded-[35px] rounded-3xl">
-                        <Waves className="text-orange-700 mb-4" size={40} />
-                        <h3 className="text-lg font-black text-orange-900 uppercase tracking-widest">Reactive Power</h3>
-                        <div className="text-5xl font-black text-orange-950 my-2">{reactivePower.toFixed(1)}</div>
-                        <div className="text-[10px] font-black opacity-40 text-orange-900 uppercase tracking-widest">kVAR per Unit</div>
-                    </Card>
+                <div className="space-y-4">
+                    <div className="bg-blue-50 rounded-2xl border border-blue-100 p-6 flex flex-col items-center text-center">
+                        <Gauge className="text-blue-600 mb-3" size={32} />
+                        <div className="font-semibold text-gray-900 mb-1">Load Factor</div>
+                        <div className="text-4xl font-bold text-gray-900">{loadFactor.toFixed(2)}</div>
+                        <p className="text-xs text-gray-500 mt-2">Ideal range prevents equipment overheating</p>
+                    </div>
+                    <div className="bg-orange-50 rounded-2xl border border-orange-100 p-6 flex flex-col items-center text-center">
+                        <Waves className="text-orange-500 mb-3" size={32} />
+                        <div className="font-semibold text-gray-900 mb-1">Reactive Power</div>
+                        <div className="text-4xl font-bold text-gray-900">{reactivePower.toFixed(1)}</div>
+                        <div className="text-xs text-gray-400 mt-1">kVAR per unit</div>
+                    </div>
                 </div>
             </div>
 
-            {/* Loss Alert Advisory */}
-            <div className="glass p-8 md:rounded-[40px] rounded-3xl border-2 border-dashed border-brand-green-light/20 flex gap-8 items-center bg-brand-green-light/[0.02] mb-12">
-                <div className="w-14 h-14 rounded-2xl bg-white/80 border border-brand-green-light/20 flex items-center justify-center text-brand-green-dark shadow-sm shrink-0">
-                    <Info size={32} />
-                </div>
+            {/* Advisory */}
+            <div className="flex gap-4 items-start p-5 bg-blue-50 rounded-xl border border-blue-100">
+                <Info size={18} className="text-blue-500 mt-0.5 shrink-0" />
                 <div>
-                    <h4 className="text-lg font-black text-brand-green-dark">Energy Advisory Protocol</h4>
-                    <p className="text-xs font-bold text-brand-green-dark/60 mt-1 max-w-3xl">
-                        Plant transmission loss is currently at <span className="text-emerald-600 font-black">{lossPercent.toFixed(1)}%</span>.
-                        While within the <span className="text-brand-green-dark font-black">10% threshold</span>, L3 Phase at RX-PLANT-01 is carrying 7% more load than L2.
-                        Rebalancing TX-3 connection is advised during the next scheduled maintenance to maximize transformer lifespan.
+                    <div className="font-semibold text-gray-900 text-sm">Energy Advisory</div>
+                    <p className="text-sm text-gray-600 mt-1">
+                        Plant transmission loss is currently at <strong className="text-green-600">{lossPercent.toFixed(1)}%</strong>.
+                        L3 Phase at RX-PLANT-01 is carrying 7% more load than L2 — rebalancing during next maintenance is advised.
                     </p>
                 </div>
             </div>
 
-            {/* Premium Machine Status Cards */}
-            <h3 className="text-2xl font-black italic uppercase tracking-tighter text-brand-green-dark mb-8">Node Specific Controls</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {/* Machine Energy Cards */}
+            <div>
+                <div className="section-title mb-4">Machine Energy Usage</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {nodeData.map((node, idx) => {
                     const { calculateMachineHealth, getStatusColor } = require('@/lib/energyCalculations');
                     const health = calculateMachineHealth(node);
@@ -288,51 +246,32 @@ export default function EnergyMonitorPage() {
                     ];
 
                     return (
-                        <Card key={node.nodeId} className={cn(
-                            "border-none shadow-none rounded-[50px] overflow-hidden transition-all duration-500",
-                            themes[idx % 4]
-                        )}>
-                            <CardContent className="p-10 pt-12">
-                                <div className="flex justify-between items-start mb-10">
-                                    <div className="space-y-3">
-                                        <h3 className="text-4xl font-black italic tracking-tighter text-brand-green-dark leading-none">
-                                            {node.nodeId.replace('TX-', 'D-')}
-                                        </h3>
-                                        <Badge variant="outline" className="bg-white/80 border-black/5 text-[8px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full text-brand-green-dark/60">
-                                            {node.phaseType === 'three' ? 'THREE PH PROTOCOL' : 'SINGLE PH PROTOCOL'}
-                                        </Badge>
-                                    </div>
-                                    <div className="w-4 h-4 rounded-full animate-pulse" style={{ backgroundColor: color }} />
+                        <div key={node.nodeId} className="bg-white rounded-2xl border border-gray-100 p-5 hover:border-gray-200 hover:shadow-md transition-all">
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <div className="font-semibold text-gray-900">{node.name}</div>
+                                    <div className="text-xs text-gray-400">{node.nodeId}</div>
                                 </div>
-
-                                <div className="space-y-4 mb-10">
-                                    <div className="flex justify-between items-end">
-                                        <span className="text-[10px] font-black italic uppercase tracking-widest text-brand-green-dark/30">Vibration Sync</span>
-                                        <span className="text-sm font-black italic tracking-tighter text-brand-green-dark">{node.vibration.toFixed(2)} mm/s</span>
-                                    </div>
-                                    <div className="h-1.5 w-full bg-brand-green-dark/5 rounded-full overflow-hidden">
-                                        <div className="h-full bg-orange-400" style={{ width: `${(node.vibration / 5) * 100}%` }} />
-                                    </div>
+                                <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: color }} />
+                            </div>
+                            <div className="text-xs text-gray-400 mb-1">Vibration</div>
+                            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-3">
+                                <div className="h-full bg-orange-400 rounded-full" style={{ width: `${(node.vibration / 5) * 100}%` }} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="bg-gray-50 rounded-lg p-2.5 text-center">
+                                    <div className="text-[10px] text-gray-400">Load</div>
+                                    <div className="font-bold text-gray-800 text-sm">{node.currentKw.toFixed(1)} kW</div>
                                 </div>
-
-                                <div className="flex gap-4">
-                                    <div className="flex-1 bg-white/80 rounded-full py-4 border border-white flex flex-col items-center justify-center">
-                                        <div className="text-[8px] font-black uppercase opacity-20">POWER</div>
-                                        <div className="text-sm font-black italic text-brand-green-dark">
-                                            {node.currentKw.toFixed(1)} <span className="text-[8px] opacity-40">kW</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex-1 bg-white/80 rounded-full py-4 border border-white flex flex-col items-center justify-center">
-                                        <div className="text-[8px] font-black uppercase opacity-20">HEALTH</div>
-                                        <div className="text-sm font-black italic" style={{ color }}>
-                                            {health.score}%
-                                        </div>
-                                    </div>
+                                <div className="bg-gray-50 rounded-lg p-2.5 text-center">
+                                    <div className="text-[10px] text-gray-400">Health</div>
+                                    <div className="font-bold text-sm" style={{ color }}>{health.score}%</div>
                                 </div>
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </div>
                     );
                 })}
+                </div>
             </div>
         </div>
     );

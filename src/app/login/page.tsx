@@ -3,141 +3,152 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useAuth, UserRole } from '@/context/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import {
-    ShieldCheck,
-    HardHat,
-    UserCircle,
-    ArrowRight,
-    Lock
-} from 'lucide-react';
+import { Shield, HardHat, BarChart3, ArrowRight, Lock, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const ROLES: {
+    role: UserRole;
+    icon: React.ElementType;
+    title: string;
+    description: string;
+    color: string;
+    bgColor: string;
+}[] = [
+    {
+        role: 'ADMIN',
+        icon: Shield,
+        title: 'Plant Director / Admin',
+        description: 'Full platform access — configure machines, view all data, manage users',
+        color: '#1a5c14',
+        bgColor: '#f0fdf4',
+    },
+    {
+        role: 'ENGINEER',
+        icon: HardHat,
+        title: 'Maintenance Engineer',
+        description: 'Monitor machine health, manage energy data and operational alerts',
+        color: '#1d4ed8',
+        bgColor: '#eff6ff',
+    },
+    {
+        role: 'MANAGER',
+        icon: BarChart3,
+        title: 'Zone Manager',
+        description: 'View carbon analytics, performance reports and sustainability metrics',
+        color: '#92400e',
+        bgColor: '#fffbeb',
+    },
+];
 
 export default function LoginPage() {
     const { login } = useAuth();
     const [selectedRole, setSelectedRole] = useState<UserRole>(null);
+    const [loading, setLoading] = useState(false);
 
     const handleLogin = (role: UserRole) => {
         setSelectedRole(role);
-        // Simulate delay for effect
-        setTimeout(() => login(role), 800);
+        setLoading(true);
+        setTimeout(() => login(role), 700);
     };
 
     return (
-        <div className="min-h-screen bg-white relative overflow-hidden flex items-center justify-center p-4">
-            {/* Background Polish */}
-            <div className="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-brand-green-light/10 blur-[150px] rounded-full pointer-events-none" />
-            <div className="fixed bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-brand-yellow/5 blur-[180px] rounded-full pointer-events-none" />
+        <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-white via-green-50/30 to-white">
+            <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
-            <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-2 gap-20 items-center relative z-10">
-
-                {/* Visual Branding Section */}
-                <div className="space-y-8 text-center lg:text-left">
-                    <div className="inline-block p-4 glass rounded-3xl border border-brand-green-light/20 mb-4 animate-bounce-slow">
-                        <Image src="/carbon_logo.png" alt="CarbonX Logo" width={180} height={50} className="object-contain" priority />
-                    </div>
+                {/* ── Left: Branding ── */}
+                <div className="space-y-8">
                     <div>
-                        <h1 className="text-5xl lg:text-7xl font-black text-brand-green-dark tracking-tighter uppercase italic leading-[0.9]">
-                            Industrial <br />
-                            <span className="text-brand-green-light underline decoration-8 underline-offset-8">Intelligence</span>
+                        <div className="inline-block p-4 bg-white rounded-2xl border border-gray-100 shadow-sm mb-6">
+                            <Image src="/carbon_logo.png" alt="CarbonX" width={160} height={46} className="object-contain" priority />
+                        </div>
+                        <h1 className="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight mb-4">
+                            Industrial Energy<br />
+                            <span className="text-green-600">Management Platform</span>
                         </h1>
-                        <p className="mt-8 text-lg font-medium text-brand-green-dark/60 max-w-md">
-                            CarbonX RX/TX Architecture for real-time energy monitoring and AI-driven carbon neutrality.
+                        <p className="text-lg text-gray-500 leading-relaxed">
+                            Monitor your factory's energy consumption, track carbon footprint, and get AI-powered machine health alerts — all in one place.
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-4 text-xs font-black text-brand-green-dark/40 uppercase tracking-[0.2em] justify-center lg:justify-start">
-                        <div className="flex -space-x-2">
-                            {[1, 2, 3].map(i => (
-                                <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-brand-green-light/20 flex items-center justify-center">
-                                    <ShieldCheck size={14} className="text-brand-green-light" />
-                                </div>
-                            ))}
-                        </div>
-                        Secure Protocol 4.0 Active
+                    {/* Feature list */}
+                    <div className="space-y-3">
+                        {[
+                            'Real-time energy monitoring across all machines',
+                            'Automated CO₂ footprint reports',
+                            'AI anomaly detection & alerts',
+                            'Multi-role access control',
+                        ].map((feat, i) => (
+                            <div key={i} className="flex items-center gap-3">
+                                <CheckCircle2 size={18} className="text-green-500 shrink-0" />
+                                <span className="text-gray-600 text-sm">{feat}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
-                {/* Login Role Selection Card */}
-                <Card className="glass p-1 md:rounded-[40px] rounded-3xl border-brand-green-light/10 shadow-2xl overflow-hidden group shadow-brand-green-light/5">
-                    <div className="bg-white/80 backdrop-blur-xl p-10 md:rounded-[38px] rounded-[30px] space-y-8">
-                        <div className="flex justify-between items-center">
-                            <h2 className="text-2xl font-black text-brand-green-dark uppercase italic">Command Access</h2>
-                            <div className="p-2 bg-brand-green-light/10 rounded-xl">
-                                <Lock size={20} className="text-brand-green-light" />
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                            <p className="text-[10px] font-black text-brand-green-dark/40 uppercase tracking-widest pl-1 mb-4">Select Authorized Personnel</p>
-
-                            {/* Role Buttons */}
-                            <button
-                                onClick={() => handleLogin('ADMIN')}
-                                className={cn(
-                                    "w-full group p-6 rounded-3xl border border-black/5 flex items-center justify-between transition-all duration-300",
-                                    selectedRole === 'ADMIN' ? "bg-brand-green-dark text-white scale-95" : "hover:bg-brand-green-light/5 hover:border-brand-green-light/20 bg-black/[0.02]"
-                                )}
-                            >
-                                <div className="flex items-center gap-5">
-                                    <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center", selectedRole === 'ADMIN' ? "bg-white/10" : "bg-brand-green-dark/5")}>
-                                        <ShieldCheck size={24} className={cn(selectedRole === 'ADMIN' ? "text-white" : "text-brand-green-dark")} />
-                                    </div>
-                                    <div className="text-left">
-                                        <div className="text-xs font-black uppercase tracking-widest opacity-40">Level 0: Root</div>
-                                        <div className="text-lg font-black italic">Super Admin</div>
-                                    </div>
-                                </div>
-                                <ArrowRight size={20} className={cn("opacity-0 group-hover:opacity-100 transition-all", selectedRole === 'ADMIN' && "opacity-100")} />
-                            </button>
-
-                            <button
-                                onClick={() => handleLogin('ENGINEER')}
-                                className={cn(
-                                    "w-full group p-6 rounded-3xl border border-black/5 flex items-center justify-between transition-all duration-300",
-                                    selectedRole === 'ENGINEER' ? "bg-brand-green-dark text-white scale-95" : "hover:bg-blue-500/5 hover:border-blue-500/20 bg-black/[0.02]"
-                                )}
-                            >
-                                <div className="flex items-center gap-5">
-                                    <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center", selectedRole === 'ENGINEER' ? "bg-white/10" : "bg-blue-500/5")}>
-                                        <HardHat size={24} className={cn(selectedRole === 'ENGINEER' ? "text-white" : "text-blue-600")} />
-                                    </div>
-                                    <div className="text-left">
-                                        <div className="text-xs font-black uppercase tracking-widest opacity-40">Level 1: Ops</div>
-                                        <div className="text-lg font-black italic">Maintenance Engineer</div>
-                                    </div>
-                                </div>
-                                <ArrowRight size={20} className={cn("opacity-0 group-hover:opacity-100 transition-all", selectedRole === 'ENGINEER' && "opacity-100")} />
-                            </button>
-
-                            <button
-                                onClick={() => handleLogin('MANAGER')}
-                                className={cn(
-                                    "w-full group p-6 rounded-3xl border border-black/5 flex items-center justify-between transition-all duration-300",
-                                    selectedRole === 'MANAGER' ? "bg-brand-green-dark text-white scale-95" : "hover:bg-orange-500/5 hover:border-orange-500/20 bg-black/[0.02]"
-                                )}
-                            >
-                                <div className="flex items-center gap-5">
-                                    <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center", selectedRole === 'MANAGER' ? "bg-white/10" : "bg-orange-500/5")}>
-                                        <UserCircle size={24} className={cn(selectedRole === 'MANAGER' ? "text-white" : "text-orange-600")} />
-                                    </div>
-                                    <div className="text-left">
-                                        <div className="text-xs font-black uppercase tracking-widest opacity-40">Level 2: Zone</div>
-                                        <div className="text-lg font-black italic">Zone Manager</div>
-                                    </div>
-                                </div>
-                                <ArrowRight size={20} className={cn("opacity-0 group-hover:opacity-100 transition-all", selectedRole === 'MANAGER' && "opacity-100")} />
-                            </button>
-                        </div>
-
-                        <div className="pt-4 text-center">
-                            <p className="text-[10px] font-bold text-brand-green-dark/30 uppercase tracking-[0.3em]">
-                                Encryption Protocol AES-256 Enabled
-                            </p>
+                {/* ── Right: Role Selection ── */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-lg p-8">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-xl font-bold text-gray-900">Select Your Role</h2>
+                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <Lock size={16} className="text-gray-500" />
                         </div>
                     </div>
-                </Card>
+
+                    <p className="text-sm text-gray-500 mb-6">
+                        Choose your access level to enter the platform. Each role has access to relevant tools and data.
+                    </p>
+
+                    <div className="space-y-3">
+                        {ROLES.map(({ role, icon: Icon, title, description, color, bgColor }) => (
+                            <button
+                                key={role}
+                                onClick={() => handleLogin(role)}
+                                disabled={loading}
+                                className={cn(
+                                    'w-full text-left p-4 rounded-xl border-2 transition-all duration-200 group',
+                                    selectedRole === role
+                                        ? 'border-gray-900 bg-gray-900'
+                                        : 'border-gray-100 hover:border-gray-200 hover:shadow-sm bg-white',
+                                    loading && selectedRole !== role && 'opacity-50 pointer-events-none'
+                                )}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <div
+                                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all"
+                                        style={{
+                                            background: selectedRole === role ? 'rgba(255,255,255,0.15)' : bgColor,
+                                            color: selectedRole === role ? '#fff' : color
+                                        }}
+                                    >
+                                        <Icon size={20} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className={cn('font-semibold text-sm', selectedRole === role ? 'text-white' : 'text-gray-900')}>
+                                            {title}
+                                        </div>
+                                        <div className={cn('text-xs mt-0.5 leading-relaxed', selectedRole === role ? 'text-gray-300' : 'text-gray-400')}>
+                                            {description}
+                                        </div>
+                                    </div>
+                                    <ArrowRight
+                                        size={16}
+                                        className={cn(
+                                            'shrink-0 transition-all',
+                                            selectedRole === role ? 'text-white translate-x-1' : 'text-gray-300 group-hover:text-gray-500'
+                                        )}
+                                    />
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="mt-6 pt-5 border-t border-gray-100 text-center">
+                        <p className="text-xs text-gray-400">
+                            This is a demo environment. No real credentials required.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     );

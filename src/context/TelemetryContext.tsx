@@ -197,7 +197,7 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
             });
             setSimulatedNodes(newSimulated);
             setTick(t => t + 1);
-        }, 5000); // 5-second real-time monitoring
+        }, 900000); // 15-minute refresh interval
 
         return () => clearInterval(interval);
     }, [csvData, addNotification]);

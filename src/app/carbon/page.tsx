@@ -104,27 +104,18 @@ export default function CarbonAnalyticsPage() {
     ];
 
     return (
-        <div className="fade-in space-y-8 pb-20 px-4 md:px-0">
-            {/* Sustainability Header */}
-            <div className="glass p-8 md:rounded-[40px] rounded-3xl flex flex-col md:flex-row justify-between items-center shadow-xl border border-brand-green-light/10 relative group mb-10">
-                <div className="absolute inset-0 grid-overlay opacity-5 -z-10 rounded-[inherit] overflow-hidden" />
-                <div className="flex items-center gap-6 relative z-10">
-                    <div className="w-20 h-20 md:rounded-3xl rounded-2xl bg-brand-green-light/10 flex items-center justify-center border border-brand-green-light/20 shadow-inner group-hover:scale-110 transition-transform duration-500">
-                        <Leaf className="text-brand-green-light" size={40} />
-                    </div>
-                    <div>
-                        <div className="flex items-center gap-3">
-                            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-brand-green-dark italic uppercase">Plant Wide Intensity</h1>
-                            <FormulaIntelligence />
-                        </div>
-                        <p className="text-brand-green-dark/60 font-medium uppercase tracking-widest text-[10px] mt-1">Real-time Molecular Density Analytics</p>
-                    </div>
+        <div className="fade-in space-y-6 pb-10">
+            {/* Page Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="page-title">Carbon Analytics</h1>
+                    <p className="text-sm text-gray-500 mt-1">Real-time CO₂ intensity, molecular density and sustainability tracking.</p>
                 </div>
-                <div className="mt-6 md:mt-0 flex gap-4">
-                    <Badge variant="outline" className="bg-brand-green-light/10 border-brand-green-light/20 text-brand-green-light px-6 py-2.5 rounded-full font-black italic uppercase tracking-widest text-[10px] flex items-center shadow-sm">
-                        <span className="w-2.5 h-2.5 rounded-full bg-brand-green-light animate-pulse mr-3" />
-                        {isLive ? 'Live Stream' : 'Simulation Mode'}
-                    </Badge>
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium shrink-0 ${
+                    isLive ? 'bg-green-50 border border-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                }`}>
+                    <span className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+                    {isLive ? 'Live Data' : 'Simulation'}
                 </div>
             </div>
 

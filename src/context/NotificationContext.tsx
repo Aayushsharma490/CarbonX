@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import type { EnergyNotification, NotificationSeverity } from '@/types/energy';
 import { notificationRateLimiter } from '@/lib/debounce';
 
@@ -8,8 +8,6 @@ interface NotificationContextType {
     notifications: EnergyNotification[];
     activeNotifications: EnergyNotification[];
     criticalCount: number;
-    isMuted: boolean;
-    toggleMute: () => void;
     addNotification: (params: {
         severity: NotificationSeverity;
         title: string;
@@ -29,38 +27,6 @@ let notificationCounter = 0;
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
     const [notifications, setNotifications] = useState<EnergyNotification[]>([]);
-    const [isMuted, setIsMuted] = useState(false);
-
-    const toggleMute = useCallback(() => {
-        setIsMuted((prev) => !prev);
-    }, []);
-
-    const playCriticalAlert = useCallback(() => {
-        try {
-            const AudioContextClass =
-                window.AudioContext || (window as any).webkitAudioContext;
-            if (!AudioContextClass) return;
-
-            const ctx = new AudioContextClass();
-            const oscillator = ctx.createOscillator();
-            const gainNode = ctx.createGain();
-
-            oscillator.connect(gainNode);
-            gainNode.connect(ctx.destination);
-
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(880, ctx.currentTime);
-            oscillator.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.3);
-
-            gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-
-            oscillator.start(ctx.currentTime);
-            oscillator.stop(ctx.currentTime + 0.5);
-        } catch (e) {
-            // Silent fallback
-        }
-    }, []);
 
     const addNotification = useCallback((params: {
         severity: NotificationSeverity;
@@ -84,13 +50,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             dismissed: false,
         };
 
-        if (isCritical && !isMuted) {
-            playCriticalAlert();
-        }
-
-        setNotifications((prev) => [notification, ...prev].slice(0, 20));
+        // No sounds — alerts are stored and visible only on the Alerts page
+        setNotifications((prev) => [notification, ...prev].slice(0, 100));
         return notification.id;
-    }, [playCriticalAlert, isMuted]);
+    }, []);
 
     const dismiss = useCallback((id: string) => {
         setNotifications((prev) =>
@@ -114,8 +77,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             notifications,
             activeNotifications,
             criticalCount,
-            isMuted,
-            toggleMute,
             addNotification,
             dismiss,
             dismissAll,
