@@ -80,17 +80,17 @@ export default function SettingsPage() {
     const formatPower = (watts: number) => `${(watts / 1000).toFixed(2)} kW`;
 
     return (
-        <div className="fade-in space-y-6 pb-20">
-            {/* Header */}
-            <div className="glass p-8 md:rounded-[40px] rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center shadow-sm gap-4">
+        <div className="fade-in space-y-6 pb-10">
+            {/* Page Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tight text-brand-green-dark">Account & System</h1>
-                    <p className="text-brand-green-dark/60 font-medium">Configure RX Gateways, tariffs, phase parameters, and alert matrices.</p>
+                    <h1 className="page-title">System Settings</h1>
+                    <p className="text-sm text-gray-500 mt-1">Configure gateways, tariffs, and alert thresholds.</p>
                 </div>
                 {saved && (
-                    <Badge className="bg-brand-green-light text-white px-4 py-2 rounded-full animate-bounce flex gap-2 w-fit">
-                        <CheckCircle2 size={16} /> Config Synced
-                    </Badge>
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-100 rounded-full text-sm font-medium text-green-700">
+                        <CheckCircle2 size={16} /> Config Saved
+                    </div>
                 )}
             </div>
 
@@ -99,105 +99,85 @@ export default function SettingsPage() {
                 {/* ─── Main Receiver & Cost Analysis ──────────────────────────── */}
                 <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {/* RX Display */}
-                    <Card className="glass-card theme-mint border-none md:rounded-[30px] rounded-2xl lg:col-span-2 overflow-hidden relative shine-hover">
-                        <CardContent className="p-8">
-                            <div className="flex justify-between items-start mb-6">
-                                <div>
-                                    <div className="text-xs font-black text-brand-green-dark/40 uppercase tracking-widest mb-1">{config.id}</div>
-                                    <h3 className="text-2xl font-black text-brand-green-dark">{config.name}</h3>
-                                </div>
-                                <Badge className="bg-brand-green-dark text-white">ACTIVE</Badge>
+                    <div className="bg-white rounded-2xl border border-gray-100 p-6 lg:col-span-2">
+                        <div className="flex justify-between items-start mb-6">
+                            <div>
+                                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">{config.id}</div>
+                                <h3 className="text-xl font-bold text-gray-900">{config.name}</h3>
                             </div>
+                            <span className="px-2 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-md">ACTIVE</span>
+                        </div>
 
-                            <div className="grid grid-cols-2 gap-4 bg-white/40 p-4 rounded-3xl border border-white/50">
-                                <div>
-                                    <p className="text-[10px] font-black opacity-40 uppercase mb-1">Total Connected Load</p>
-                                    <div className="text-3xl font-black text-brand-green-dark">
-                                        {formatPower(totalPowerConsumption)}
-                                    </div>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black opacity-40 uppercase mb-1">Active TX Units</p>
-                                    <div className="text-3xl font-black text-brand-green-dark">
-                                        {config.txUnits.length}
-                                    </div>
+                        <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl">
+                            <div>
+                                <p className="text-xs font-medium text-gray-500 mb-1">Total Connected Load</p>
+                                <div className="text-2xl font-bold text-gray-900">
+                                    {formatPower(totalPowerConsumption)}
                                 </div>
                             </div>
-                        </CardContent>
-                    </Card>
+                            <div>
+                                <p className="text-xs font-medium text-gray-500 mb-1">Active TX Units</p>
+                                <div className="text-2xl font-bold text-gray-900">
+                                    {config.txUnits.length}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     {/* Unit Tariff Settings */}
-                    <Card className="glass-card theme-yellow border-none md:rounded-[30px] rounded-2xl shine-hover">
-                        <CardContent className="p-8 h-full flex flex-col justify-between">
-                            <div>
-                                <h3 className="text-lg font-black text-yellow-900 mb-2">Electricity Tariff</h3>
-                                <p className="text-xs text-yellow-900/60 font-bold leading-relaxed mb-4">
-                                    Set the cost per kWh (Unit) for accurate cost projections and daily averages.
-                                </p>
+                    <div className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col justify-between">
+                        <div>
+                            <h3 className="text-base font-semibold text-gray-900 mb-2">Electricity Tariff</h3>
+                            <p className="text-sm text-gray-500 mb-4">Set the cost per kWh for accurate projections.</p>
+                        </div>
+                        <div className="space-y-3">
+                            <label className="text-xs font-medium text-gray-700">Rate (₹ / kWh)</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-2.5 text-gray-400 font-medium">₹</span>
+                                <Input
+                                    type="number"
+                                    value={config.unitRate}
+                                    onChange={(e) => updateConfig({ unitRate: Number(e.target.value) })}
+                                    className="pl-7"
+                                />
                             </div>
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-black opacity-40 uppercase block text-brand-green-dark">Rate (₹ / kWh)</label>
-                                <div className="relative">
-                                    <span className="absolute left-4 top-3 text-brand-green-dark font-black">₹</span>
-                                    <Input
-                                        type="number"
-                                        value={config.unitRate}
-                                        onChange={(e) => updateConfig({ unitRate: Number(e.target.value) })}
-                                        className="bg-white/50 pl-8 rounded-xl font-bold border-white/60 focus:ring-brand-yellow"
-                                    />
-                                </div>
-                                <Button onClick={handleSave} className="w-full bg-brand-yellow hover:bg-yellow-500 text-yellow-900 font-bold rounded-xl mt-2 shadow-lg shadow-brand-yellow/20">
-                                    Save Rate
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            <Button onClick={handleSave} className="w-full mt-2">Save Rate</Button>
+                        </div>
+                    </div>
 
                     {/* Alert Matrix / Loss Sensitivity */}
-                    <Card className="glass-card theme-peach border-none md:rounded-[30px] rounded-2xl shine-hover">
-                        <CardContent className="p-8 h-full flex flex-col justify-between">
-                            <div>
-                                <h3 className="text-lg font-black text-orange-900 mb-2">Loss Sensitivity</h3>
-                                <p className="text-xs text-orange-900/60 font-bold leading-relaxed mb-4">
-                                    Energy loss threshold that triggers a CRITICAL alert matrix.
-                                </p>
+                    <div className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col justify-between">
+                        <div>
+                            <h3 className="text-base font-semibold text-gray-900 mb-2">Loss Sensitivity</h3>
+                            <p className="text-sm text-gray-500 mb-4">Energy loss threshold for critical alerts.</p>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="flex justify-between text-sm font-semibold text-gray-900">
+                                <span>Threshold</span>
+                                <span className="text-orange-600">{config.lossThreshold}%</span>
                             </div>
-                            <div className="space-y-4">
-                                <div className="flex justify-between text-xs font-black text-orange-900">
-                                    <span>Threshold</span>
-                                    <Badge className="bg-orange-600">{config.lossThreshold}%</Badge>
-                                </div>
-                                <input
-                                    type="range"
-                                    min="2"
-                                    max="25"
-                                    value={config.lossThreshold}
-                                    onChange={(e) => updateConfig({ lossThreshold: Number(e.target.value) })}
-                                    className="w-full h-3 bg-white/40 rounded-full appearance-none cursor-pointer accent-orange-600"
-                                />
-                                <div className="flex justify-between text-[10px] font-black opacity-40">
-                                    <span>AGGRESSIVE (2%)</span>
-                                    <span>RELAXED (25%)</span>
-                                </div>
-                                <Button onClick={handleSave} className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl shadow-lg shadow-orange-600/20">
-                                    Update Threshold
-                                </Button>
+                            <input
+                                type="range"
+                                min="2"
+                                max="25"
+                                value={config.lossThreshold}
+                                onChange={(e) => updateConfig({ lossThreshold: Number(e.target.value) })}
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                            />
+                            <div className="flex justify-between text-xs text-gray-400">
+                                <span>Strict (2%)</span>
+                                <span>Relaxed (25%)</span>
                             </div>
-                        </CardContent>
-                    </Card>
+                            <Button onClick={handleSave} className="w-full" variant="outline">Update Threshold</Button>
+                        </div>
+                    </div>
                 </div>
 
                 {/* ─── Device Management Hierarchy ──────────────────────────────── */}
-                <div className="lg:col-span-3 space-y-6">
-                    <div className="flex justify-between items-center px-2">
-                        <h2 className="text-2xl font-black text-brand-green-dark flex items-center gap-3">
-                            <Cpu size={28} className="text-brand-green-light" />
-                            Transmitters & Devices
-                        </h2>
-                        <Button
-                            onClick={openWizard}
-                            className="bg-brand-green-dark hover:bg-brand-green-light text-white rounded-full font-bold px-6"
-                        >
+                <div className="lg:col-span-3 space-y-4 mt-4">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="section-title">Transmitters & Devices</h2>
+                        <Button onClick={openWizard} size="sm">
                             <Plus size={16} className="mr-2" /> Add TX Unit
                         </Button>
                     </div>

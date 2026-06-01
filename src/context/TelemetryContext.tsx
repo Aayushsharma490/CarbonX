@@ -58,7 +58,7 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         if (csvData.length === 0) return;
 
-        const interval = setInterval(() => {
+        const updateSimulated = () => {
             const newSimulated = new Map();
             const machineIds = ['TX-JMS', 'TX-EBOOT', 'TX-SARA', 'D-003', 'XT2-CRANE-01', 'XT2-HOIST-01', 'XT2-MOTOR-01'];
             
@@ -197,7 +197,11 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
             });
             setSimulatedNodes(newSimulated);
             setTick(t => t + 1);
-        }, 900000); // 15-minute refresh interval
+        };
+        
+        // Run immediately, then every 15 mins
+        updateSimulated();
+        const interval = setInterval(updateSimulated, 900000);
 
         return () => clearInterval(interval);
     }, [csvData, addNotification]);
@@ -286,7 +290,7 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
                         name: device.name,
                         zone: tx.name,
                         phaseType: device.phaseType,
-                        targetKw: device.power / 1000,
+                        targetKw: (device.power || 15000) / 1000,
                         kwh: 0, kvarh: 0, currentKw: 0,
                         phaseVoltages: [400, 400, 400],
                         phaseCurrents: [0, 0, 0],
@@ -310,10 +314,10 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
                     name: device.name,
                     zone: tx.name,
                     phaseType: device.phaseType,
-                    targetKw: device.power / 1000,
+                    targetKw: (device.power || 15000) / 1000,
                     kwh: parseFloat(log.kwh || rawTel.kwh || 0),
                     kvarh: parseFloat(log.kvarh || rawTel.kvarh || 0),
-                    currentKw: currentKw || 0,
+                    currentKw: currentKw || 0.1,
                     phaseVoltages: source === 'csv' 
                         ? [parseFloat(log.voltage_l1), parseFloat(log.voltage_l2), parseFloat(log.voltage_l3)]
                         : [log.R_V || 400, log.Y_V || 400, log.B_V || 400],

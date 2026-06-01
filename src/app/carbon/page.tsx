@@ -31,7 +31,7 @@ const CO2_PER_TREE_YEAR = 20;
 function generateHistoricalCarbonData() {
     return Array.from({ length: 24 }, (_, i) => ({
         time: `${i}:00`,
-        co2: 40 + Math.random() * 20,
+        co2: 40 + Math.abs(Math.sin(i)) * 20,
         target: 45
     }));
 }
@@ -176,14 +176,18 @@ export default function CarbonAnalyticsPage() {
                     </CardHeader>
                     <CardContent className="h-[300px] pb-10 px-6">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={latestLogs.slice().reverse().map((log, i) => {
+                            <AreaChart data={latestLogs.length > 0 ? latestLogs.slice().reverse().map((log, i) => {
                                 const date = new Date(log.timestamp);
                                 return {
                                     time: isNaN(date.getTime()) ? `T-${i}m` : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                                     ppm: log.telemetry?.co2_ppm || 420 + (Math.sin(i / 5) * 20),
                                     target: 400
                                 };
-                            })}>
+                            }) : Array.from({ length: 24 }).map((_, i) => ({
+                                time: `${i}:00`,
+                                ppm: 400 + Math.abs(Math.sin(i)) * 20,
+                                target: 400
+                            }))}>
                                 <defs>
                                     <filter id="glowCarbon" x="-20%" y="-20%" width="140%" height="140%">
                                         <feGaussianBlur stdDeviation="3" result="blur" />
