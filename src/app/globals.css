@@ -92,8 +92,26 @@
 
 /* ─── App Background ─────────────────────────────────────────────────────── */
 .app-bg {
-  background: linear-gradient(160deg, #ffffff 0%, #f6fef4 50%, #edf9ea 100%);
+  background: linear-gradient(-45deg, #ffffff, #f2fbf0, #e8f7e5, #ffffff);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
   min-height: 100vh;
+  position: relative;
+}
+
+.app-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(45, 138, 34, 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 /* ─── Card System ─────────────────────────────────────────────────────────── */

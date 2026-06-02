@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import {
     Activity, Zap, Leaf, AlertTriangle,
     TrendingUp, TrendingDown, RefreshCw, Server,
-    Thermometer, Wind, Gauge, Sparkles
+    Thermometer, Wind, Gauge, Sparkles, Lightbulb, ShieldCheck, Wrench
 } from 'lucide-react';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid,
@@ -18,6 +18,7 @@ import { calculateEnergyLoss, calculateMachineHealth, kwhToCo2Kg, getStatusColor
 import { cn } from '@/lib/utils';
 import { useSystem } from '@/context/SystemContext';
 import { useTelemetry } from '@/context/TelemetryContext';
+import { useAuth } from '@/context/AuthContext';
 
 const TREND_DATA = [
     { time: '00:00', kwh: 120 },
@@ -147,6 +148,7 @@ export default function DashboardPage() {
     const [mounted, setMounted] = useState(false);
     const { config } = useSystem();
     const { gatewayData, loading, latestLogs, nodeData } = useTelemetry();
+    const { role } = useAuth();
 
     useEffect(() => { setMounted(true); }, []);
 
@@ -237,6 +239,69 @@ export default function DashboardPage() {
                     accentColor={lossResult.lossPercent > config.lossThreshold ? '#dc2626' : '#d97706'}
                 />
             </div>
+
+            {/* ── AI Role Suggestions ── */}
+            {(() => {
+                const getRoleSuggestions = () => {
+                    if (role === 'ADMIN') {
+                        return {
+                            title: "Executive Insights",
+                            icon: ShieldCheck,
+                            color: "text-blue-800 bg-blue-50/80 border-blue-100",
+                            iconColor: "text-blue-500",
+                            items: [
+                                "System-wide energy efficiency is up by 3.2% this week.",
+                                "Consider adjusting TX2 baseline thresholds to save up to 12% on peak usage.",
+                                "No critical anomalies detected in the last 72 hours."
+                            ]
+                        };
+                    } else if (role === 'ENGINEER') {
+                        const weakNodes = nodeData.filter(n => calculateMachineHealth(n).score < 75).length;
+                        return {
+                            title: "Maintenance Actions",
+                            icon: Wrench,
+                            color: "text-amber-800 bg-amber-50/80 border-amber-100",
+                            iconColor: "text-amber-600",
+                            items: [
+                                weakNodes > 0 ? `${weakNodes} machines require immediate inspection due to declining health.` : "All machines operating within normal health bounds.",
+                                "Minor vibration anomaly detected on TX2-Motor-B yesterday. Schedule routine check.",
+                                "Phase voltage on TX1 is fluctuating near acceptable limits."
+                            ]
+                        };
+                    } else {
+                        return {
+                            title: "Operations AI",
+                            icon: Lightbulb,
+                            color: "text-purple-800 bg-purple-50/80 border-purple-100",
+                            iconColor: "text-purple-500",
+                            items: [
+                                "Shift B operations are consuming 15% less power than Shift A.",
+                                "Review the alerts tab; minor warnings remain unacknowledged.",
+                                "All primary transmitters are operating optimally."
+                            ]
+                        };
+                    }
+                };
+
+                const suggestions = getRoleSuggestions();
+
+                return (
+                    <div className={`p-5 rounded-2xl border ${suggestions.color} flex flex-col md:flex-row md:items-center gap-4 transition-all hover:shadow-md animate-in fade-in slide-in-from-bottom-2 duration-700`}>
+                        <div className="flex items-center gap-2 mb-1 md:mb-0 md:w-1/5 shrink-0">
+                            <suggestions.icon size={22} className={suggestions.iconColor} />
+                            <h3 className="font-black text-sm uppercase tracking-wider opacity-90">{suggestions.title}</h3>
+                        </div>
+                        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {suggestions.items.map((text, idx) => (
+                                <div key={idx} className="flex items-start gap-2.5 bg-white/60 backdrop-blur-sm p-3 rounded-xl border border-black/5 hover:bg-white/80 transition-colors">
+                                    <Sparkles size={14} className={`shrink-0 mt-0.5 ${suggestions.iconColor}`} />
+                                    <p className="text-sm font-semibold opacity-80 leading-snug">{text}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* ── Chart + Node List ── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
