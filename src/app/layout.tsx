@@ -53,14 +53,20 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="CarbonX" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className={`${inter.className} min-h-screen relative overflow-x-hidden text-gray-900 bg-[#f8fafc]`} suppressHydrationWarning>
-        {/* Simple Background with Small Centered Logo */}
+      <body className={`${inter.className} min-h-screen relative overflow-x-hidden text-gray-900 bg-[#f4f7f5]`} suppressHydrationWarning>
+        {/* Creative Background with Large Visible Logo */}
         <div className="fixed inset-0 -z-50 flex flex-col items-center justify-center overflow-hidden pointer-events-none">
-            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02]" />
+            {/* Tech Grid Pattern */}
+            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.04]" />
+            
+            {/* Subtle Glowing Radial Gradient behind logo */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(45,138,34,0.05)_0%,_transparent_60%)]" />
+
+            {/* Large Watermark Logo */}
             <img 
                 src="/carbon_logo.png" 
                 alt="Background Logo" 
-                className="w-48 md:w-64 opacity-[0.04] grayscale object-contain"
+                className="w-11/12 max-w-3xl opacity-[0.12] grayscale object-contain drop-shadow-sm"
             />
         </div>
 
