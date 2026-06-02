@@ -38,12 +38,12 @@ export function useFirebaseLogs() {
                 setLoading(false);
                 setIsLive(true);
             }, (error) => {
-                console.warn("Firebase not reachable, sticking to mock data:", error);
+                // Silently fallback to mock data
                 setIsLive(false);
             });
             return () => unsubscribe();
         } catch (e) {
-            console.error("Firebase extraction failed", e);
+            // Silently fallback
             setIsLive(false);
         }
     }, []);

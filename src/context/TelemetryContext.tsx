@@ -221,7 +221,7 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
                 setIsLive(true);
                 setLoading(false);
             }, (error) => {
-                console.warn("Firebase telemetry listener failed:", error);
+                // Silently ignore permission errors in Simulation mode
                 setIsLive(false);
                 setLoading(false);
             });
@@ -247,7 +247,7 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
                 }
                 setLoading(false);
             }, (error) => {
-                console.warn("RTDB listener failed:", error);
+                // Silently ignore permission errors in Simulation mode
                 setIsLive(false);
                 setLoading(false);
             });
