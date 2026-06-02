@@ -66,7 +66,7 @@ export default function RootLayout({
             <img 
                 src="/carbon_logo.png" 
                 alt="Background Logo" 
-                className="w-11/12 max-w-3xl opacity-[0.12] grayscale object-contain drop-shadow-sm"
+                className="w-11/12 max-w-3xl opacity-[0.10] object-contain drop-shadow-md"
             />
         </div>
 
