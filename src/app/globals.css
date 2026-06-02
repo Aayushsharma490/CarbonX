@@ -92,19 +92,18 @@
 
 /* ─── App Background ─────────────────────────────────────────────────────── */
 .app-bg {
-  background: linear-gradient(-45deg, #ffffff, #f2fbf0, #e8f7e5, #ffffff);
+  background: linear-gradient(-45deg, #e6f9ed, #f0f4ff, #eefdf2, #f5f3ff);
   background-size: 400% 400%;
   animation: gradientBG 15s ease infinite;
   min-height: 100vh;
-  position: relative;
 }
 
 .app-bg::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(rgba(45, 138, 34, 0.05) 1px, transparent 1px);
-  background-size: 32px 32px;
+  background-image: radial-gradient(rgba(45, 138, 34, 0.08) 1.5px, transparent 1.5px);
+  background-size: 40px 40px;
   pointer-events: none;
 }
 
