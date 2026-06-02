@@ -53,13 +53,14 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="CarbonX" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className={`${inter.className} min-h-screen relative overflow-x-hidden text-gray-900 bg-white`} suppressHydrationWarning>
-        {/* Simple White Background with Low Opacity Centered Logo */}
-        <div className="fixed inset-0 -z-50 bg-white flex items-center justify-center overflow-hidden pointer-events-none">
+      <body className={`${inter.className} min-h-screen relative overflow-x-hidden text-gray-900 bg-[#f8fafc]`} suppressHydrationWarning>
+        {/* Simple Background with Small Centered Logo */}
+        <div className="fixed inset-0 -z-50 flex flex-col items-center justify-center overflow-hidden pointer-events-none">
+            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02]" />
             <img 
                 src="/carbon_logo.png" 
                 alt="Background Logo" 
-                className="w-full max-w-4xl opacity-[0.03] grayscale"
+                className="w-48 md:w-64 opacity-[0.04] grayscale object-contain"
             />
         </div>
 
@@ -67,7 +68,7 @@ export default function RootLayout({
           <AuthGuard>
             <PWAInstallBanner />
             <AppNavigation />
-            <main className="relative z-10 p-4 md:p-8 max-w-7xl mx-auto min-h-[calc(100vh-80px)] pb-12">
+            <main className="relative z-10 px-4 md:px-8 pt-28 md:pt-32 max-w-7xl mx-auto min-h-[calc(100vh-80px)] pb-12">
               {children}
             </main>
           </AuthGuard>
