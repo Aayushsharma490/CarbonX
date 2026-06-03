@@ -298,12 +298,14 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
             tx.devices.map(device => {
                 let log: any;
                 let source = 'firebase';
+                const firebaseLog = latestPerNode.get(tx.id) || latestPerNode.get(device.id);
 
-                if (tx.id === 'TX-2' || tx.id === 'XT-2' || simulatedNodes.has(device.id)) {
+                if (firebaseLog) {
+                    log = firebaseLog;
+                    source = 'firebase';
+                } else if (tx.id === 'TX-2' || tx.id === 'XT-2' || simulatedNodes.has(device.id)) {
                     log = simulatedNodes.get(device.id);
                     source = 'csv';
-                } else {
-                    log = latestPerNode.get(tx.id) || latestPerNode.get(device.id);
                 }
 
                 if (!log) {

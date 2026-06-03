@@ -36,6 +36,7 @@ async function pushZeros() {
             CO2: 0,
             Vib: "OFFLINE",
             Time: new Date().toISOString(),
+            timestamp: new Date().toISOString(),
             kwh: 0,
             kvarh: 0,
             status: "OFFLINE",
