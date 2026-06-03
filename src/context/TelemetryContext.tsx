@@ -60,7 +60,8 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
 
         const updateSimulated = () => {
             const newSimulated = new Map();
-            const machineIds = ['TX-JMS', 'TX-EBOOT', 'TX-SARA', 'D-003', 'XT2-CRANE-01', 'XT2-HOIST-01', 'XT2-MOTOR-01'];
+            // Dynamically load ALL machine IDs from System Config
+            const machineIds = config.txUnits.flatMap(tx => tx.devices.map(d => d.id));
             
             machineIds.forEach(id => {
                 const machineRows = csvData.filter(r => r.node_id === id);
@@ -68,7 +69,7 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
                 
                 if (machineRows.length > 0) {
                     rowData = machineRows[Math.floor(Math.random() * machineRows.length)];
-                } else {
+                } else if (id.startsWith('XT2-')) {
                     // Generate synthetic data for XT2 devices
                     rowData = {
                         node_id: id,
@@ -87,6 +88,27 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
                         kwh: (Math.random() * 100 + 500).toFixed(2),
                         kvarh: (Math.random() * 50 + 100).toFixed(2),
                         co2_ppm: Math.floor(Math.random() * 100 + 400)
+                    };
+                } else {
+                    // Default to Zero for new unknown devices (like TX-3 bulbs)
+                    rowData = {
+                        node_id: id,
+                        active_power_kw: "0.00",
+                        temperature: "0.0",
+                        temperature_c: "0.0",
+                        vibration: "0.00",
+                        vibration_v_rms: "0.00",
+                        voltage_l1: "0.0",
+                        voltage_l2: "0.0",
+                        voltage_l3: "0.0",
+                        current_l1: "0.0",
+                        current_l2: "0.0",
+                        current_l3: "0.0",
+                        pf: "0.00",
+                        kwh: "0.00",
+                        kvarh: "0.00",
+                        co2_ppm: 0,
+                        status: "OFFLINE"
                     };
                 }
                 
