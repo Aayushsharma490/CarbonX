@@ -90,25 +90,29 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
                         co2_ppm: Math.floor(Math.random() * 100 + 400)
                     };
                 } else {
-                    // Default to Zero for new unknown devices (like TX-3 bulbs)
+                    // Simulate a running active device (like the a.js script) for unknown/new nodes
+                    const powerKw = (0.2 + Math.random() * 0.3).toFixed(2);
+                    const current = (parseFloat(powerKw) * 1000 / 230).toFixed(2);
+                    const voltage = (220 + Math.random() * 10).toFixed(1);
+
                     rowData = {
                         node_id: id,
-                        active_power_kw: "0.00",
-                        temperature: "0.0",
-                        temperature_c: "0.0",
+                        active_power_kw: powerKw,
+                        temperature: (35 + Math.random() * 10).toFixed(1),
+                        temperature_c: (35 + Math.random() * 10).toFixed(1),
                         vibration: "0.00",
                         vibration_v_rms: "0.00",
-                        voltage_l1: "0.0",
-                        voltage_l2: "0.0",
-                        voltage_l3: "0.0",
-                        current_l1: "0.0",
-                        current_l2: "0.0",
-                        current_l3: "0.0",
-                        pf: "0.00",
-                        kwh: "0.00",
-                        kvarh: "0.00",
-                        co2_ppm: 0,
-                        status: "OFFLINE"
+                        voltage_l1: voltage,
+                        voltage_l2: voltage,
+                        voltage_l3: voltage,
+                        current_l1: current,
+                        current_l2: current,
+                        current_l3: current,
+                        pf: (0.95 + Math.random() * 0.04).toFixed(2),
+                        kwh: (Math.random() * 50).toFixed(2),
+                        kvarh: (Math.random() * 5).toFixed(2),
+                        co2_ppm: Math.floor(400 + Math.random() * 50),
+                        status: "OPERATIONAL"
                     };
                 }
                 
