@@ -225,9 +225,9 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
             setTick(t => t + 1);
         };
         
-        // Run immediately, then every 15 mins
+        // Run immediately, then every 5 seconds
         updateSimulated();
-        const interval = setInterval(updateSimulated, 900000);
+        const interval = setInterval(updateSimulated, 5000);
 
         return () => clearInterval(interval);
     }, [csvData, addNotification]);
