@@ -233,57 +233,36 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
     }, [csvData, addNotification]);
 
     useEffect(() => {
-        setLoading(true);
-        // --- 1. Firestore Listener (Legacy/Backup) ---
-        let unsubscribeFirestore = () => { };
-        if (db) {
-            const q = query(collection(db, "AI_Logs"), orderBy("timestamp", "desc"), limit(50));
-            unsubscribeFirestore = onSnapshot(q, (snapshot) => {
-                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setLatestLogs(prev => {
-                    const combined = [...data, ...prev].slice(0, 100);
-                    return Array.from(new Map(combined.map(item => [item.id || item.Time, item])).values());
-                });
-                setIsLive(true);
-                setLoading(false);
-            }, (error) => {
-                // Silently ignore permission errors in Simulation mode
-                setIsLive(false);
-                setLoading(false);
-            });
-        }
-
-        // --- 2. Realtime Database Listener (Primary) ---
-        let unsubscribeRTDB = () => { };
-        if (realtimeDb) {
-            const logsRef = rtdbQuery(ref(realtimeDb, 'AI_Logs'), limitToLast(50));
-            unsubscribeRTDB = onValue(logsRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    const logsArray = Object.keys(data).map(key => ({
-                        id: key,
-                        ...data[key]
-                    })).reverse(); 
-
-                    setLatestLogs(prev => {
-                        const combined = [...logsArray, ...prev].slice(0, 100);
-                        return Array.from(new Map(combined.map(item => [item.id || item.Time || Math.random(), item])).values());
-                    });
-                    setIsLive(true);
+        let isMounted = true;
+        
+        const fetchTelemetry = async () => {
+            try {
+                const res = await fetch('/api/telemetry');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.logs && data.logs.length > 0) {
+                        setLatestLogs(prev => {
+                            const combined = [...data.logs, ...prev].slice(0, 100);
+                            return Array.from(new Map(combined.map((item: any) => [item.id || item.Time || Math.random(), item])).values());
+                        });
+                        setIsLive(true);
+                    }
+                } else {
+                    setIsLive(false);
                 }
-                setLoading(false);
-            }, (error) => {
-                // Silently ignore permission errors in Simulation mode
+            } catch (err) {
                 setIsLive(false);
-                setLoading(false);
-            });
-        } else {
-            setLoading(false);
-        }
+            }
+            if (isMounted) setLoading(false);
+        };
+
+        // Fetch immediately and poll every 5 seconds
+        fetchTelemetry();
+        const pollInterval = setInterval(fetchTelemetry, 5000);
 
         return () => {
-            unsubscribeFirestore();
-            if (realtimeDb) unsubscribeRTDB();
+            isMounted = false;
+            clearInterval(pollInterval);
         };
     }, []);
 
