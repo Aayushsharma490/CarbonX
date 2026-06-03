@@ -331,9 +331,9 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
                 const rawTel = log.telemetry || {};
                 const timestamp = log.Time || log.timestamp || new Date().toISOString();
                 
-                let currentKw = source === 'csv' ? parseFloat(log.active_power_kw) : parseFloat(rawTel.active_power_kw || 0);
+                let currentKw = source === 'csv' ? parseFloat(log.active_power_kw) : parseFloat(rawTel.active_power_kw ?? log.active_power_kw ?? 0);
                 if (currentKw === 0 && log.R_A && source === 'firebase') {
-                    const phasePower = ((log.R_V || 230) * (log.R_A || 0) + (log.Y_V || 230) * (log.Y_A || 0) + (log.B_V || 230) * (log.B_A || 0));
+                    const phasePower = ((log.R_V ?? 230) * (log.R_A ?? 0) + (log.Y_V ?? 230) * (log.Y_A ?? 0) + (log.B_V ?? 230) * (log.B_A ?? 0));
                     currentKw = parseFloat((phasePower / 1000).toFixed(2));
                 }
 
@@ -343,19 +343,19 @@ export function TelemetryProvider({ children }: { children: React.ReactNode }) {
                     zone: tx.name,
                     phaseType: device.phaseType,
                     targetKw: (device.power || 15000) / 1000,
-                    kwh: parseFloat(log.kwh || rawTel.kwh || 0),
-                    kvarh: parseFloat(log.kvarh || rawTel.kvarh || 0),
-                    currentKw: currentKw || 0.1,
+                    kwh: parseFloat(log.kwh ?? rawTel.kwh ?? 0),
+                    kvarh: parseFloat(log.kvarh ?? rawTel.kvarh ?? 0),
+                    currentKw: currentKw ?? 0,
                     phaseVoltages: source === 'csv' 
                         ? [parseFloat(log.voltage_l1), parseFloat(log.voltage_l2), parseFloat(log.voltage_l3)]
-                        : [log.R_V || 400, log.Y_V || 400, log.B_V || 400],
+                        : [log.R_V ?? 0, log.Y_V ?? 0, log.B_V ?? 0],
                     phaseCurrents: source === 'csv'
                         ? [parseFloat(log.current_l1), parseFloat(log.current_l2), parseFloat(log.current_l3)]
-                        : [log.R_A || 0, log.Y_A || 0, log.B_A || 0],
-                    powerFactor: parseFloat(log.pf || log.PF || rawTel.power_factor || 0.92),
-                    temperature: parseFloat(log.temperature || log.temperature_c || log.Temp || rawTel.temperature_c || 45),
-                    vibration: typeof log.vibration === 'string' ? (log.vibration === 'NORM' ? 0.45 : 3.2) : parseFloat(log.vibration || log.vibration_v_rms || log.Vib || 0.5),
-                    ppm: parseFloat(log.co2_ppm || log.ppm || log.CO2 || 420),
+                        : [log.R_A ?? 0, log.Y_A ?? 0, log.B_A ?? 0],
+                    powerFactor: parseFloat(log.pf ?? log.PF ?? rawTel.power_factor ?? 0.92),
+                    temperature: parseFloat(log.temperature ?? log.temperature_c ?? log.Temp ?? rawTel.temperature_c ?? 45),
+                    vibration: typeof log.vibration === 'string' ? (log.vibration === 'NORM' ? 0.45 : 3.2) : parseFloat(log.vibration ?? log.vibration_v_rms ?? log.Vib ?? 0.5),
+                    ppm: parseFloat(log.co2_ppm ?? log.ppm ?? log.CO2 ?? 420),
                     isOnline: source === 'csv' ? true : (Date.now() - new Date(timestamp).getTime() < 45000),
                     timestamp
                 };

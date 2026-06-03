@@ -56,8 +56,9 @@ async function pushZeros() {
             console.error(`Firebase Sync Error for ${bulbId}:`, error);
         }
     }
+    console.log("All zero values sent. Exiting.");
+    process.exit(0);
 }
 
 console.log("Starting Firebase Zero Value Sender for Bulbs (TX-3)...");
-setInterval(pushZeros, 5000);
-pushZeros(); // Send first batch immediately
+pushZeros(); // Send batch immediately and exit
