@@ -1,24 +1,34 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import {
-    Activity, Zap, Leaf, AlertTriangle,
-    TrendingUp, TrendingDown, RefreshCw, Server,
-    Thermometer, Wind, Gauge, Sparkles, Lightbulb, ShieldCheck, Wrench
-} from 'lucide-react';
-import {
-    LineChart, Line, XAxis, YAxis, CartesianGrid,
-    Tooltip as RechartsTooltip, ResponsiveContainer, AreaChart, Area,
-} from 'recharts';
-import { calculateEnergyLoss, calculateMachineHealth, kwhToCo2Kg, getStatusColor } from '@/lib/energyCalculations';
-import { cn } from '@/lib/utils';
+import Link from 'next/link';
+import { useAppMode } from '@/context/ModeContext';
+import { usePersonalData } from '@/context/PersonalDataContext';
 import { useSystem } from '@/context/SystemContext';
 import { useTelemetry } from '@/context/TelemetryContext';
 import { useAuth } from '@/context/AuthContext';
+import { getPrioritizedActions } from '@/lib/carbon-engine/recommendationEngine';
+import { UncertaintyRangeBadge } from '@/components/personal/UncertaintyRangeBadge';
+import { FreshnessBadge } from '@/components/personal/FreshnessBadge';
+import { AnomalyAlertBanner } from '@/components/personal/AnomalyAlertBanner';
+import { ActivityLineageDrawer } from '@/components/personal/ActivityLineageDrawer';
+import { OcrBillParserModal } from '@/components/personal/OcrBillParserModal';
+import { ActionPriorityCard } from '@/components/personal/ActionPriorityCard';
+import { calculateEnergyLoss, calculateMachineHealth, kwhToCo2Kg } from '@/lib/energyCalculations';
+import { cn } from '@/lib/utils';
+import {
+    Activity, Zap, Leaf, AlertTriangle,
+    TrendingUp, TrendingDown, RefreshCw, Server,
+    Plus, ScanLine, Sliders, ShieldCheck, ArrowRight,
+    Sparkles, Target, Compass, Layers, Info, CheckCircle2,
+    Calendar, Wrench, Lightbulb
+} from 'lucide-react';
+import {
+    ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
+    CartesianGrid, Tooltip as RechartsTooltip, BarChart, Bar, Cell
+} from 'recharts';
+
+// ─── Shared Industrial Components ─────────────────────────────────────────────
 
 const TREND_DATA = [
     { time: '00:00', kwh: 120 },
@@ -29,8 +39,7 @@ const TREND_DATA = [
     { time: '20:00', kwh: 310 },
 ];
 
-// ── Small metric card ──────────────────────────────────────────────────────────
-function MetricCard({
+function IndustrialMetricCard({
     label, value, unit, icon: Icon, trend, trendLabel, accentColor = '#16a34a'
 }: {
     label: string; value: string | number; unit?: string;
@@ -62,7 +71,6 @@ function MetricCard({
     );
 }
 
-// ── Machine node card ──────────────────────────────────────────────────────────
 function MachineCard({ node }: { node: any }) {
     const health = calculateMachineHealth(node);
     const statusColor = node.isOnline
@@ -73,7 +81,6 @@ function MachineCard({ node }: { node: any }) {
 
     return (
         <div className="bg-white rounded-2xl border border-gray-100 p-5 hover:border-gray-200 hover:shadow-md transition-all">
-            {/* Header */}
             <div className="flex items-start justify-between mb-4">
                 <div>
                     <h3 className="font-semibold text-gray-900">{node.name}</h3>
@@ -91,7 +98,6 @@ function MachineCard({ node }: { node: any }) {
                 </div>
             </div>
 
-            {/* Health bar */}
             <div className="mb-4">
                 <div className="flex justify-between text-xs text-gray-400 mb-1.5">
                     <span>Health Score</span>
@@ -105,7 +111,6 @@ function MachineCard({ node }: { node: any }) {
                 </div>
             </div>
 
-            {/* Key metrics */}
             <div className="grid grid-cols-3 gap-2">
                 {[
                     { label: 'Load',  value: `${node.currentKw.toFixed(1)} kW` },
@@ -119,7 +124,6 @@ function MachineCard({ node }: { node: any }) {
                 ))}
             </div>
 
-            {/* AI Insights Section */}
             <div className="mt-4 pt-4 border-t border-gray-50">
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500">
@@ -143,21 +147,18 @@ function MachineCard({ node }: { node: any }) {
     );
 }
 
-// ── Main dashboard ─────────────────────────────────────────────────────────────
-export default function DashboardPage() {
-    const [mounted, setMounted] = useState(false);
+// ─── Industrial Dashboard View (Organization Mode) ────────────────────────────
+function IndustrialDashboardView() {
     const { config } = useSystem();
-    const { gatewayData, loading, latestLogs, nodeData } = useTelemetry();
+    const { gatewayData, loading, nodeData } = useTelemetry();
     const { role } = useAuth();
 
-    useEffect(() => { setMounted(true); }, []);
-
-    if (!mounted || loading) {
+    if (loading) {
         return (
             <div className="flex items-center justify-center py-32">
                 <div className="flex items-center gap-3 text-gray-400">
                     <RefreshCw size={20} className="animate-spin" />
-                    <span className="font-medium">Loading dashboard data…</span>
+                    <span className="font-medium">Loading industrial telemetry…</span>
                 </div>
             </div>
         );
@@ -168,7 +169,7 @@ export default function DashboardPage() {
             <div className="text-center py-32">
                 <Server size={40} className="text-gray-300 mx-auto mb-4" />
                 <div className="text-gray-500 font-medium">Waiting for telemetry data…</div>
-                <div className="text-sm text-gray-400 mt-1">Make sure your devices are connected.</div>
+                <div className="text-sm text-gray-400 mt-1">Ensure ESP32 transmitters are connected.</div>
             </div>
         );
     }
@@ -181,29 +182,33 @@ export default function DashboardPage() {
 
     return (
         <div className="fade-in space-y-6 pb-10">
-
-            {/* ── Page header ── */}
+            {/* Page Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="page-title">Operations Dashboard</h1>
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200">
+                            Organization Mode
+                        </span>
+                    </div>
+                    <h1 className="page-title">Industrial Operations Dashboard</h1>
                     <p className="text-sm text-gray-500 mt-1">
-                        {gatewayData.name} &nbsp;·&nbsp; Last updated: {lastUpdated}
+                        {gatewayData.name} &nbsp;·&nbsp; RX Gateway Protocol &nbsp;·&nbsp; Last updated: {lastUpdated}
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-100 rounded-full text-sm font-medium text-green-700">
                         <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        Live
+                        Live Protocol
                     </div>
                     <div className="px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-full text-sm font-medium text-gray-500">
-                        {onlineCount}/{nodeData.length} Machines Online
+                        {onlineCount}/{nodeData.length} TX Nodes Online
                     </div>
                 </div>
             </div>
 
-            {/* ── KPI Cards ── */}
+            {/* KPI Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <MetricCard
+                <IndustrialMetricCard
                     label="Total Energy Used"
                     value={gatewayData.totalKwh.toFixed(0)}
                     unit="kWh"
@@ -212,8 +217,8 @@ export default function DashboardPage() {
                     trendLabel="+3.2%"
                     accentColor="#2d8a22"
                 />
-                <MetricCard
-                    label="CO₂ Footprint"
+                <IndustrialMetricCard
+                    label="Industrial CO₂ Footprint"
                     value={totalCo2.toFixed(1)}
                     unit="kg"
                     icon={Leaf}
@@ -221,7 +226,7 @@ export default function DashboardPage() {
                     trendLabel="-1.1%"
                     accentColor="#2563eb"
                 />
-                <MetricCard
+                <IndustrialMetricCard
                     label="System Health"
                     value="92"
                     unit="/100"
@@ -229,7 +234,7 @@ export default function DashboardPage() {
                     trend="neutral"
                     accentColor="#7c3aed"
                 />
-                <MetricCard
+                <IndustrialMetricCard
                     label="Line Loss"
                     value={lossResult.lossPercent.toFixed(1)}
                     unit="%"
@@ -240,72 +245,8 @@ export default function DashboardPage() {
                 />
             </div>
 
-            {/* ── AI Role Suggestions ── */}
-            {(() => {
-                const getRoleSuggestions = () => {
-                    if (role === 'ADMIN') {
-                        return {
-                            title: "Executive Insights",
-                            icon: ShieldCheck,
-                            color: "text-blue-800 bg-blue-50/80 border-blue-100",
-                            iconColor: "text-blue-500",
-                            items: [
-                                "System-wide energy efficiency is up by 3.2% this week.",
-                                "Consider adjusting TX2 baseline thresholds to save up to 12% on peak usage.",
-                                "No critical anomalies detected in the last 72 hours."
-                            ]
-                        };
-                    } else if (role === 'ENGINEER') {
-                        const weakNodes = nodeData.filter(n => calculateMachineHealth(n).score < 75).length;
-                        return {
-                            title: "Maintenance Actions",
-                            icon: Wrench,
-                            color: "text-amber-800 bg-amber-50/80 border-amber-100",
-                            iconColor: "text-amber-600",
-                            items: [
-                                weakNodes > 0 ? `${weakNodes} machines require immediate inspection due to declining health.` : "All machines operating within normal health bounds.",
-                                "Minor vibration anomaly detected on TX2-Motor-B yesterday. Schedule routine check.",
-                                "Phase voltage on TX1 is fluctuating near acceptable limits."
-                            ]
-                        };
-                    } else {
-                        return {
-                            title: "Operations AI",
-                            icon: Lightbulb,
-                            color: "text-purple-800 bg-purple-50/80 border-purple-100",
-                            iconColor: "text-purple-500",
-                            items: [
-                                "Shift B operations are consuming 15% less power than Shift A.",
-                                "Review the alerts tab; minor warnings remain unacknowledged.",
-                                "All primary transmitters are operating optimally."
-                            ]
-                        };
-                    }
-                };
-
-                const suggestions = getRoleSuggestions();
-
-                return (
-                    <div className={`p-5 rounded-2xl border ${suggestions.color} flex flex-col md:flex-row md:items-center gap-4 transition-all hover:shadow-md animate-in fade-in slide-in-from-bottom-2 duration-700`}>
-                        <div className="flex items-center gap-2 mb-1 md:mb-0 md:w-1/5 shrink-0">
-                            <suggestions.icon size={22} className={suggestions.iconColor} />
-                            <h3 className="font-black text-sm uppercase tracking-wider opacity-90">{suggestions.title}</h3>
-                        </div>
-                        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
-                            {suggestions.items.map((text, idx) => (
-                                <div key={idx} className="flex items-start gap-2.5 bg-white/60 backdrop-blur-sm p-3 rounded-xl border border-black/5 hover:bg-white/80 transition-colors">
-                                    <Sparkles size={14} className={`shrink-0 mt-0.5 ${suggestions.iconColor}`} />
-                                    <p className="text-sm font-semibold opacity-80 leading-snug">{text}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                );
-            })()}
-
-            {/* ── Chart + Node List ── */}
+            {/* Chart + Machine List */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                {/* Energy trend chart */}
                 <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 p-6">
                     <div className="flex items-center justify-between mb-6">
                         <div>
@@ -323,35 +264,15 @@ export default function DashboardPage() {
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                                <XAxis
-                                    dataKey="time"
-                                    axisLine={false} tickLine={false}
-                                    tick={{ fontSize: 11, fill: '#9ca3af', fontWeight: 500 }}
-                                    dy={8}
-                                />
-                                <YAxis
-                                    axisLine={false} tickLine={false}
-                                    tick={{ fontSize: 11, fill: '#9ca3af', fontWeight: 500 }}
-                                    width={40}
-                                />
-                                <RechartsTooltip
-                                    contentStyle={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, fontSize: 13, fontWeight: 600 }}
-                                    itemStyle={{ color: '#2d8a22' }}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="kwh"
-                                    stroke="#2d8a22"
-                                    strokeWidth={2.5}
-                                    fill="url(#energyGrad)"
-                                    dot={{ r: 3, fill: '#2d8a22', strokeWidth: 2, stroke: '#fff' }}
-                                />
+                                <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af', fontWeight: 500 }} dy={8} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af', fontWeight: 500 }} width={40} />
+                                <RechartsTooltip contentStyle={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, fontSize: 13, fontWeight: 600 }} itemStyle={{ color: '#2d8a22' }} />
+                                <Area type="monotone" dataKey="kwh" stroke="#2d8a22" strokeWidth={2.5} fill="url(#energyGrad)" dot={{ r: 3, fill: '#2d8a22', strokeWidth: 2, stroke: '#fff' }} />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
 
-                {/* Machine status list */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-6">
                     <div className="section-title mb-4">Machine Status</div>
                     <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
@@ -360,10 +281,7 @@ export default function DashboardPage() {
                             return (
                                 <div key={node.nodeId} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">
                                     <div className="flex items-center gap-3">
-                                        <span
-                                            className="w-2 h-2 rounded-full shrink-0"
-                                            style={{ backgroundColor: node.isOnline ? '#16a34a' : '#dc2626' }}
-                                        />
+                                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: node.isOnline ? '#16a34a' : '#dc2626' }} />
                                         <div>
                                             <div className="text-sm font-medium text-gray-800">{node.name}</div>
                                             <div className="text-xs text-gray-400">{node.nodeId}</div>
@@ -380,9 +298,9 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* ── Machine Cards Grid ── */}
+            {/* Machine Cards Grid */}
             <div>
-                <div className="section-title mb-4">All Machines</div>
+                <div className="section-title mb-4">Connected Transmitters & Cranes</div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {nodeData.map((node) => (
                         <MachineCard key={node.nodeId} node={node} />
@@ -391,4 +309,327 @@ export default function DashboardPage() {
             </div>
         </div>
     );
+}
+
+// ─── Personal Dashboard View (Personal Mode) ──────────────────────────────────
+function PersonalDashboardView() {
+    const { summary, target, mlPrediction, dataTrustReport, hasDemoData, resetToDemoData, setSelectedLineageActivity } = usePersonalData();
+    const [isOcrOpen, setIsOcrOpen] = useState(false);
+
+    const prioritizedActions = getPrioritizedActions().slice(0, 3);
+    const targetGap = summary.totalCO2e - target.monthlyTargetKg;
+
+    // Monthly historical comparison trend data
+    const monthlyTrendData = [
+        { month: 'Jun', co2: 380, target: 300 },
+        { month: 'Jul', co2: 365, target: 300 },
+        { month: 'Aug', co2: 355, target: 300 },
+        { month: 'Sep (Current)', co2: summary.totalCO2e, target: target.monthlyTargetKg },
+        { month: 'Oct (Predicted)', co2: mlPrediction.predictedCO2e, target: target.monthlyTargetKg }
+    ];
+
+    const categoryColors: Record<string, string> = {
+        Travel: '#10b981',
+        Electricity: '#3b82f6',
+        Purchases: '#8b5cf6',
+        Food: '#f59e0b',
+        Lifestyle: '#ec4899'
+    };
+
+    const categoryArray = Object.entries(summary.categoryBreakdown).map(([cat, val]) => ({
+        category: cat,
+        co2e: val.co2e,
+        sharePct: val.sharePct,
+        freshness: val.freshness,
+        color: categoryColors[cat] || '#6b7280'
+    })).filter(c => c.co2e > 0);
+
+    return (
+        <div className="fade-in space-y-6 pb-12">
+            {/* Anomaly Banner if any */}
+            <AnomalyAlertBanner />
+
+            {/* Demo Data Notice if Active */}
+            {hasDemoData && (
+                <div className="flex items-center justify-between p-3 bg-blue-50/70 border border-blue-100 rounded-2xl text-xs text-blue-800">
+                    <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                        <span><strong>Demo Profile Active</strong>: Initial seeded baseline for Indian urban lifestyle. You can log real activities anytime.</span>
+                    </div>
+                    <button
+                        onClick={resetToDemoData}
+                        className="text-xs font-bold text-blue-700 hover:underline shrink-0 ml-2"
+                    >
+                        Reset Demo Baseline
+                    </button>
+                </div>
+            )}
+
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
+                            Personal Carbon Intelligence
+                        </span>
+                        <span className="text-xs text-gray-400 font-medium">· Decision Engine v4.0</span>
+                    </div>
+                    <h1 className="page-title">Personal Footprint Dashboard</h1>
+                    <p className="text-sm text-gray-500 mt-1">
+                        Continuous footprint tracking, uncertainty bounds, and actionable reduction pathways.
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                    <button
+                        onClick={() => setIsOcrOpen(true)}
+                        className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-gray-200 text-gray-700 hover:text-gray-900 text-xs font-bold rounded-xl hover:bg-gray-50 transition-all shadow-2xs"
+                    >
+                        <ScanLine size={15} className="text-green-600" />
+                        <span>Scan Bill (OCR)</span>
+                    </button>
+                    <Link href="/activities">
+                        <button className="flex items-center gap-1.5 px-4 py-2 bg-gray-900 text-white text-xs font-bold rounded-xl hover:bg-gray-800 transition-all shadow-xs">
+                            <Plus size={15} />
+                            <span>Log Activity</span>
+                        </button>
+                    </Link>
+                </div>
+            </div>
+
+            {/* Top Row: Primary Decision Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* 1. Monthly Footprint & Uncertainty */}
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 hover:border-gray-200 hover:shadow-md transition-all">
+                    <div className="flex items-start justify-between mb-3">
+                        <div className="w-10 h-10 rounded-xl bg-green-50 text-green-700 flex items-center justify-center font-bold">
+                            <Leaf size={20} />
+                        </div>
+                        <FreshnessBadge freshness="RECENT" />
+                    </div>
+                    <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Monthly Footprint</div>
+                    <div className="text-2xl font-black text-gray-900">
+                        {summary.totalCO2e} <span className="text-sm font-normal text-gray-400">kg CO₂e</span>
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-gray-50 flex items-center justify-between">
+                        <UncertaintyRangeBadge min={summary.uncertaintyMin} max={summary.uncertaintyMax} />
+                    </div>
+                </div>
+
+                {/* 2. Target & Gap */}
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 hover:border-gray-200 hover:shadow-md transition-all">
+                    <div className="flex items-start justify-between mb-3">
+                        <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold">
+                            <Target size={20} />
+                        </div>
+                        <span className={cn(
+                            'text-xs font-extrabold px-2.5 py-0.5 rounded-full border',
+                            targetGap > 0
+                                ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                : 'bg-green-50 text-green-700 border-green-200'
+                        )}>
+                            {targetGap > 0 ? `+${targetGap} kg Gap` : 'On Track'}
+                        </span>
+                    </div>
+                    <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Target vs Current</div>
+                    <div className="text-2xl font-black text-gray-900">
+                        {target.monthlyTargetKg} <span className="text-sm font-normal text-gray-400">kg Target</span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-50 flex justify-between">
+                        <span>Current: {summary.totalCO2e} kg</span>
+                        <span className="font-semibold text-gray-700">{target.reductionPctGoal}% 2026 Goal</span>
+                    </div>
+                </div>
+
+                {/* 3. Explainable Confidence */}
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 hover:border-gray-200 hover:shadow-md transition-all">
+                    <div className="flex items-start justify-between mb-3">
+                        <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center font-bold">
+                            <ShieldCheck size={20} />
+                        </div>
+                        <span className="text-xs font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200">
+                            High Confidence
+                        </span>
+                    </div>
+                    <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Data Confidence</div>
+                    <div className="text-2xl font-black text-gray-900">
+                        {summary.overallConfidence}%
+                    </div>
+                    <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-50 flex justify-between">
+                        <span>Quality Score: {dataTrustReport.overallQualityScore}%</span>
+                        <Link href="/data-trust" className="text-green-700 font-bold hover:underline">
+                            Audit Trust →
+                        </Link>
+                    </div>
+                </div>
+
+                {/* 4. Top Contributor & ML Forecast */}
+                <div className="bg-white rounded-2xl border border-gray-100 p-5 hover:border-gray-200 hover:shadow-md transition-all">
+                    <div className="flex items-start justify-between mb-3">
+                        <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
+                            <Sparkles size={20} />
+                        </div>
+                        <span className="text-[11px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                            Next Mo: {mlPrediction.predictedCO2e} kg
+                        </span>
+                    </div>
+                    <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Top Contributor</div>
+                    <div className="text-2xl font-black text-gray-900">
+                        {summary.topCategory}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-50 truncate" title={mlPrediction.topFactor}>
+                        <span>ML: {mlPrediction.topFactor}</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Middle Section: Trend Chart + Category Breakdown */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                {/* 5-Month Trajectory & Forecast */}
+                <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 p-6">
+                    <div className="flex items-center justify-between mb-5">
+                        <div>
+                            <div className="section-title">Footprint Trajectory & ML Projection</div>
+                            <div className="text-xs text-gray-400 mt-0.5">Historical monthly actuals vs. Gradient Boosted next-period forecast</div>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs">
+                            <div className="flex items-center gap-1.5 text-gray-600 font-medium">
+                                <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" /> Actual / Projected
+                            </div>
+                            <div className="flex items-center gap-1.5 text-gray-400">
+                                <span className="w-2.5 h-2.5 rounded-full bg-gray-300" /> Target ({target.monthlyTargetKg} kg)
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="h-60">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={monthlyTrendData}>
+                                <defs>
+                                    <linearGradient id="personalCo2Grad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280', fontWeight: 600 }} dy={8} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af', fontWeight: 500 }} width={40} />
+                                <RechartsTooltip
+                                    contentStyle={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, fontSize: 12, fontWeight: 600 }}
+                                    formatter={(value: any) => [`${value} kg CO₂e`, 'Footprint']}
+                                />
+                                <Area
+                                    type="monotone"
+                                    dataKey="co2"
+                                    stroke="#10b981"
+                                    strokeWidth={3}
+                                    fill="url(#personalCo2Grad)"
+                                    dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }}
+                                />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* Category Contribution & Provenance */}
+                <div className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col justify-between">
+                    <div>
+                        <div className="section-title mb-1">Category Breakdown</div>
+                        <div className="text-xs text-gray-400 mb-4">Proportion and data provenance source</div>
+
+                        <div className="space-y-3">
+                            {categoryArray.map(cat => (
+                                <div key={cat.category} className="space-y-1">
+                                    <div className="flex items-center justify-between text-xs">
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                                            <span className="font-bold text-gray-800">{cat.category}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-semibold text-gray-900">{cat.co2e} kg ({cat.sharePct}%)</span>
+                                            <FreshnessBadge freshness={cat.freshness} />
+                                        </div>
+                                    </div>
+                                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full rounded-full transition-all duration-500"
+                                            style={{ width: `${cat.sharePct}%`, backgroundColor: cat.color }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="pt-4 mt-4 border-t border-gray-100 flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Explore full details:</span>
+                        <Link href="/footprint" className="text-xs font-bold text-gray-900 hover:text-green-700 flex items-center gap-1">
+                            <span>Footprint Deep Dive</span>
+                            <ArrowRight size={13} />
+                        </Link>
+                    </div>
+                </div>
+            </div>
+
+            {/* Bottom Row: Top 3 Prioritized Actions */}
+            <div>
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <div className="section-title">Top 3 Prioritized Reduction Actions</div>
+                        <div className="text-xs text-gray-400 mt-0.5">
+                            Ranked by explainable formula: (CO₂ Reduction × Confidence) ÷ (Effort × Cost)
+                        </div>
+                    </div>
+                    <Link href="/insights" className="text-xs font-bold text-green-700 hover:underline flex items-center gap-1">
+                        <span>View All Recommendations ({getPrioritizedActions().length})</span>
+                        <ArrowRight size={13} />
+                    </Link>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {prioritizedActions.map(action => (
+                        <ActionPriorityCard
+                            key={action.id}
+                            action={action}
+                            onSimulate={() => {
+                                window.location.href = '/what-if';
+                            }}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {/* Modals */}
+            <OcrBillParserModal isOpen={isOcrOpen} onClose={() => setIsOcrOpen(false)} />
+            <ActivityLineageDrawer />
+        </div>
+    );
+}
+
+// ─── Main Root Dashboard Component ───────────────────────────────────────────
+export default function DashboardPage() {
+    const [mounted, setMounted] = useState(false);
+    const { mode } = useAppMode();
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) {
+        return (
+            <div className="flex items-center justify-center py-32">
+                <div className="flex items-center gap-3 text-gray-400">
+                    <RefreshCw size={20} className="animate-spin" />
+                    <span className="font-medium">Loading CarbonX platform…</span>
+                </div>
+            </div>
+        );
+    }
+
+    // Render mode-specific dashboard
+    if (mode === 'organization') {
+        return <IndustrialDashboardView />;
+    }
+
+    return <PersonalDashboardView />;
 }

@@ -17,12 +17,12 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'CarbonX | Industrial Energy Management',
+    default: 'CarbonX | Carbon Intelligence Platform',
     template: '%s | CarbonX',
   },
   description:
-    'CarbonX — Industrial energy monitoring platform. Real-time machine health, carbon footprint tracking, and AI-powered anomaly detection for manufacturing plants.',
-  keywords: ['energy monitoring', 'industrial IoT', 'carbon footprint', 'machine health', 'AI', 'CarbonX'],
+    'CarbonX — Carbon Intelligence Platform. From Individual Choices to Industrial Decisions. Deterministic carbon calculation, explainable uncertainty bounds, and IoT machine health monitoring.',
+  keywords: ['carbon intelligence', 'carbon footprint', 'carbon decision engine', 'energy monitoring', 'industrial IoT', 'emission factors', 'CarbonX'],
   authors: [{ name: 'CarbonX Team' }],
   creator: 'CarbonX',
   manifest: '/manifest.json',
@@ -32,11 +32,12 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    title: 'CarbonX | Industrial Energy Management',
-    description: 'Real-time energy monitoring, carbon footprint tracking, and AI machine health analysis for industrial plants.',
+    title: 'CarbonX | Carbon Intelligence Platform',
+    description: 'From Individual Choices to Industrial Decisions. Precision carbon calculations and industrial energy monitoring.',
     siteName: 'CarbonX',
   },
 };
+
 
 export default function RootLayout({
   children,
@@ -53,21 +54,43 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="CarbonX" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className={`${inter.className} min-h-screen relative overflow-x-hidden text-gray-900 bg-[#f4f7f5]`} suppressHydrationWarning>
-        {/* Creative Background with Large Visible Logo */}
-        <div className="fixed inset-0 -z-50 flex flex-col items-center justify-center overflow-hidden pointer-events-none">
-            {/* Tech Grid Pattern */}
-            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.04]" />
-            
-            {/* Subtle Glowing Radial Gradient behind logo */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(45,138,34,0.05)_0%,_transparent_60%)]" />
+      <body className={`${inter.className} min-h-screen relative overflow-x-hidden text-gray-900 bg-[#f9fbf9] antialiased text-[15px]`} suppressHydrationWarning>
+        {/* Subtle Transparent CarbonX Background Watermark (No Grid) */}
+        <div 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 0,
+            pointerEvents: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+          }}
+          aria-hidden="true"
+        >
+          {/* Subtle Radial Glow */}
+          <div 
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'radial-gradient(circle at 50% 40%, rgba(45,138,34,0.03) 0%, transparent 70%)',
+            }}
+          />
 
-            {/* Large Watermark Logo */}
-            <img 
-                src="/carbon_logo.png" 
-                alt="Background Logo" 
-                className="w-11/12 max-w-3xl opacity-[0.10] object-contain drop-shadow-md"
-            />
+          {/* Light Opacity Centered CarbonX Logo */}
+          <img 
+            src="/carbon_logo.png" 
+            alt="" 
+            style={{
+              width: '560px',
+              maxWidth: '85vw',
+              opacity: 0.035,
+              objectFit: 'contain',
+              userSelect: 'none',
+              filter: 'grayscale(30%)',
+            }}
+          />
         </div>
 
         <Providers>
