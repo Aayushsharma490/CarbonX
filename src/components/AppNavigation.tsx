@@ -5,7 +5,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { useAppMode, AppMode } from '@/context/ModeContext';
 import {
     LayoutDashboard,
     Activity,
@@ -16,35 +15,15 @@ import {
     Menu,
     X,
     LogOut,
-    Bell,
-    Layers,
-    PieChart,
-    Lightbulb,
-    Sliders,
-    Target,
-    Users,
-    ShieldCheck,
-    User,
-    Building2
+    Bell
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGlobalNotifications } from '@/context/NotificationContext';
 
-// ─── Route Lists ─────────────────────────────────────────────────────────────
+// ─── Navigation Routes ────────────────────────────────────────────────────────
 
-const PERSONAL_NAV_ITEMS = [
-    { href: '/dashboard',   label: 'Dashboard',   icon: LayoutDashboard },
-    { href: '/activities',  label: 'Activities',  icon: Layers },
-    { href: '/footprint',   label: 'Footprint',   icon: PieChart },
-    { href: '/insights',    label: 'Insights',    icon: Lightbulb },
-    { href: '/what-if',     label: 'What-If',     icon: Sliders },
-    { href: '/target',      label: 'Target',      icon: Target },
-    { href: '/household',   label: 'Household',   icon: Users },
-    { href: '/data-trust',  label: 'Data Trust',  icon: ShieldCheck },
-] as const;
-
-const ORG_NAV_ITEMS = [
-    { href: '/dashboard',  label: 'Dashboard',       icon: LayoutDashboard },
+const NAV_ITEMS = [
+    { href: '/dashboard',  label: 'Dashboard',        icon: LayoutDashboard },
     { href: '/machines',   label: 'Machine Health',   icon: Activity },
     { href: '/carbon',     label: 'Carbon Analytics', icon: Leaf },
     { href: '/energy',     label: 'Energy Monitor',   icon: Zap },
@@ -52,58 +31,19 @@ const ORG_NAV_ITEMS = [
     { href: '/settings',   label: 'Settings',         icon: Settings },
 ] as const;
 
-// ─── Mode Switcher Component ──────────────────────────────────────────────────
-function ModeSwitcherPill() {
-    const { mode, setMode } = useAppMode();
-
-    return (
-        <div className="flex items-center bg-gray-100 p-0.5 rounded-full border border-gray-200/80 shrink-0">
-            <button
-                type="button"
-                onClick={() => setMode('personal')}
-                className={cn(
-                    'flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all',
-                    mode === 'personal'
-                        ? 'bg-white text-gray-900 shadow-xs'
-                        : 'text-gray-500 hover:text-gray-900'
-                )}
-            >
-                <User size={13} strokeWidth={mode === 'personal' ? 2.5 : 2} />
-                <span>Personal</span>
-            </button>
-            <button
-                type="button"
-                onClick={() => setMode('organization')}
-                className={cn(
-                    'flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all',
-                    mode === 'organization'
-                        ? 'bg-white text-gray-900 shadow-xs'
-                        : 'text-gray-500 hover:text-gray-900'
-                )}
-            >
-                <Building2 size={13} strokeWidth={mode === 'organization' ? 2.5 : 2} />
-                <span>Organization</span>
-            </button>
-        </div>
-    );
-}
-
 // ─── Desktop Navigation ───────────────────────────────────────────────────────
 function DesktopNav({ pathname }: { pathname: string }) {
     const { role, logout, user } = useAuth();
-    const { mode } = useAppMode();
     const { criticalCount } = useGlobalNotifications();
 
-    const navItems = mode === 'personal'
-        ? PERSONAL_NAV_ITEMS
-        : ORG_NAV_ITEMS.filter(item => {
-            if (role === 'ADMIN') return true;
-            if (role === 'ENGINEER') return ['/dashboard', '/machines', '/energy', '/settings'].includes(item.href);
-            if (role === 'MANAGER') return ['/dashboard', '/carbon', '/reports'].includes(item.href);
-            return true;
-        });
+    const navItems = NAV_ITEMS.filter(item => {
+        if (role === 'ADMIN') return true;
+        if (role === 'ENGINEER') return ['/dashboard', '/machines', '/energy', '/settings'].includes(item.href);
+        if (role === 'MANAGER') return ['/dashboard', '/carbon', '/reports'].includes(item.href);
+        return true;
+    });
 
-    const canSeeAlerts = mode === 'organization' && (role === 'ADMIN' || role === 'ENGINEER');
+    const canSeeAlerts = role === 'ADMIN' || role === 'ENGINEER';
 
     return (
         <nav
@@ -111,14 +51,9 @@ function DesktopNav({ pathname }: { pathname: string }) {
             className="fixed top-3 left-1/2 -translate-x-1/2 z-[100] hidden lg:flex items-center gap-1 px-3 py-1.5 nav-pill print:hidden w-auto max-w-6xl shadow-md bg-white/90 backdrop-blur-md rounded-full border border-gray-100"
         >
             {/* Logo */}
-            <Link href="/" className="pl-2 pr-4 flex items-center border-r border-gray-100 mr-1">
+            <Link href="/dashboard" className="pl-2 pr-4 flex items-center border-r border-gray-100 mr-2">
                 <Image src="/carbon_logo.png" alt="CarbonX" width={78} height={24} className="object-contain" priority />
             </Link>
-
-            {/* Mode Switcher */}
-            <div className="mr-2">
-                <ModeSwitcherPill />
-            </div>
 
             {/* Nav Links */}
             <div className="flex items-center gap-0.5">
@@ -144,7 +79,7 @@ function DesktopNav({ pathname }: { pathname: string }) {
 
             {/* Right section */}
             <div className="flex items-center gap-2 pl-3 ml-2 border-l border-gray-100">
-                {/* Alerts bell for Org mode */}
+                {/* Alerts bell */}
                 {canSeeAlerts && (
                     <Link
                         href="/alerts"
@@ -154,6 +89,7 @@ function DesktopNav({ pathname }: { pathname: string }) {
                                 ? 'bg-gray-900 text-white'
                                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                         )}
+                        title="Alerts"
                     >
                         <Bell size={14} strokeWidth={2} />
                         {criticalCount > 0 && (
@@ -164,10 +100,10 @@ function DesktopNav({ pathname }: { pathname: string }) {
                     </Link>
                 )}
 
-                {/* Role badge */}
+                {/* User / Role badge */}
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-50 border border-gray-100">
-                    <div className={cn('w-2 h-2 rounded-full', mode === 'personal' ? 'bg-emerald-500' : 'bg-blue-500')} />
-                    <span className="text-[11px] font-bold text-gray-600">{mode === 'personal' ? 'Personal' : (user?.name || role)}</span>
+                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="text-[11px] font-bold text-gray-700">{user?.name || role || 'User'}</span>
                 </div>
 
                 {/* Logout */}
@@ -187,19 +123,16 @@ function DesktopNav({ pathname }: { pathname: string }) {
 function MobileNav({ pathname }: { pathname: string }) {
     const [isOpen, setIsOpen] = useState(false);
     const { role, logout, user } = useAuth();
-    const { mode } = useAppMode();
     const { criticalCount } = useGlobalNotifications();
 
-    const navItems = mode === 'personal'
-        ? PERSONAL_NAV_ITEMS
-        : ORG_NAV_ITEMS.filter(item => {
-            if (role === 'ADMIN') return true;
-            if (role === 'ENGINEER') return ['/dashboard', '/machines', '/energy', '/settings'].includes(item.href);
-            if (role === 'MANAGER') return ['/dashboard', '/carbon', '/reports'].includes(item.href);
-            return true;
-        });
+    const navItems = NAV_ITEMS.filter(item => {
+        if (role === 'ADMIN') return true;
+        if (role === 'ENGINEER') return ['/dashboard', '/machines', '/energy', '/settings'].includes(item.href);
+        if (role === 'MANAGER') return ['/dashboard', '/carbon', '/reports'].includes(item.href);
+        return true;
+    });
 
-    const canSeeAlerts = mode === 'organization' && (role === 'ADMIN' || role === 'ENGINEER');
+    const canSeeAlerts = role === 'ADMIN' || role === 'ENGINEER';
 
     return (
         <>
@@ -208,12 +141,11 @@ function MobileNav({ pathname }: { pathname: string }) {
                 id="mobile-topbar"
                 className="lg:hidden flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100 shadow-xs sticky top-0 z-50"
             >
-                <Link href="/" className="flex items-center">
+                <Link href="/dashboard" className="flex items-center">
                     <Image src="/carbon_logo.png" alt="CarbonX" width={80} height={24} className="object-contain" priority />
                 </Link>
 
                 <div className="flex items-center gap-2">
-                    <ModeSwitcherPill />
                     {canSeeAlerts && (
                         <Link href="/alerts" className="relative w-8 h-8 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-all">
                             <Bell size={18} />
@@ -242,8 +174,8 @@ function MobileNav({ pathname }: { pathname: string }) {
                         {/* Header */}
                         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                             <div>
-                                <div className="font-bold text-gray-900 text-sm">CarbonX Platform</div>
-                                <div className="text-xs text-green-700 capitalize font-medium">{mode} Mode Active</div>
+                                <div className="font-bold text-gray-900 text-sm">CarbonX</div>
+                                <div className="text-xs text-gray-500 font-medium">{user?.name || role || 'Platform'}</div>
                             </div>
                             <button onClick={() => setIsOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100">
                                 <X size={16} />

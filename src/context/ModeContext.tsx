@@ -3,10 +3,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 
-export type AppMode = 'personal' | 'organization';
+export type AppMode = 'organization' | 'personal';
 
 interface ModeContextType {
-    mode: AppMode;
+    mode: 'organization';
     setMode: (mode: AppMode) => void;
     toggleMode: () => void;
     isPersonal: boolean;
@@ -16,46 +16,34 @@ interface ModeContextType {
 const ModeContext = createContext<ModeContextType | undefined>(undefined);
 
 export function ModeProvider({ children }: { children: React.ReactNode }) {
-    // Default mode is personal
-    const [mode, setModeState] = useState<AppMode>('personal');
-    const [isLoaded, setIsLoaded] = useState(false);
+    // Mode is locked to industrial / organization
     const router = useRouter();
     const pathname = usePathname();
 
     useEffect(() => {
-        const savedMode = localStorage.getItem('carbonx_app_mode') as AppMode | null;
-        if (savedMode === 'personal' || savedMode === 'organization') {
-            setModeState(savedMode);
-        }
-        setIsLoaded(true);
-    }, []);
-
-    const setMode = (newMode: AppMode) => {
-        setModeState(newMode);
-        localStorage.setItem('carbonx_app_mode', newMode);
-
-        // Intelligently route if current route is mode-specific
+        localStorage.setItem('carbonx_app_mode', 'organization');
+        // Redirect legacy personal-only routes back to the main industrial dashboard
         const personalOnlyRoutes = ['/activities', '/footprint', '/insights', '/what-if', '/target', '/household', '/data-trust'];
-        const orgOnlyRoutes = ['/machines', '/carbon', '/energy', '/reports', '/alerts', '/settings'];
-
-        if (newMode === 'organization' && personalOnlyRoutes.includes(pathname)) {
-            router.push('/dashboard');
-        } else if (newMode === 'personal' && orgOnlyRoutes.includes(pathname)) {
-            router.push('/dashboard');
+        if (personalOnlyRoutes.includes(pathname)) {
+            router.replace('/dashboard');
         }
+    }, [pathname, router]);
+
+    const setMode = (_newMode: AppMode) => {
+        localStorage.setItem('carbonx_app_mode', 'organization');
     };
 
     const toggleMode = () => {
-        setMode(mode === 'personal' ? 'organization' : 'personal');
+        localStorage.setItem('carbonx_app_mode', 'organization');
     };
 
     return (
         <ModeContext.Provider value={{
-            mode,
+            mode: 'organization',
             setMode,
             toggleMode,
-            isPersonal: mode === 'personal',
-            isOrganization: mode === 'organization'
+            isPersonal: false,
+            isOrganization: true
         }}>
             {children}
         </ModeContext.Provider>

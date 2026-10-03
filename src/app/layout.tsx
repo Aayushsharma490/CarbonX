@@ -17,12 +17,12 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'CarbonX | Carbon Intelligence Platform',
+    default: 'CarbonX | Industrial Carbon & Energy Intelligence',
     template: '%s | CarbonX',
   },
   description:
-    'CarbonX — Carbon Intelligence Platform. From Individual Choices to Industrial Decisions. Deterministic carbon calculation, explainable uncertainty bounds, and IoT machine health monitoring.',
-  keywords: ['carbon intelligence', 'carbon footprint', 'carbon decision engine', 'energy monitoring', 'industrial IoT', 'emission factors', 'CarbonX'],
+    'CarbonX — Industrial Carbon & Energy Intelligence Platform. Real-time SCADA IoT telemetry, 3-tier line loss forensics, certified Scope 1-3 carbon accounting, and predictive machine health.',
+  keywords: ['carbon intelligence', 'industrial telemetry', 'energy monitoring', 'industrial IoT', 'emission factors', 'CarbonX', 'predictive maintenance', 'SCADA'],
   authors: [{ name: 'CarbonX Team' }],
   creator: 'CarbonX',
   manifest: '/manifest.json',
@@ -32,8 +32,8 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    title: 'CarbonX | Carbon Intelligence Platform',
-    description: 'From Individual Choices to Industrial Decisions. Precision carbon calculations and industrial energy monitoring.',
+    title: 'CarbonX | Industrial Carbon & Energy Intelligence',
+    description: 'Precision industrial carbon calculations, ESP32 telemetry, line loss forensics, and machine health monitoring.',
     siteName: 'CarbonX',
   },
 };
