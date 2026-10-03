@@ -7,7 +7,8 @@ import { motion } from 'framer-motion';
 import {
     ArrowRight, Zap, Leaf, Activity, BarChart3,
     Shield, Building2, Sliders, Cpu,
-    CheckCircle2, Gauge, AlertTriangle, FileSpreadsheet
+    CheckCircle2, Gauge, AlertTriangle, FileSpreadsheet,
+    Factory, Network, Radio
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -19,43 +20,43 @@ export default function Page() {
     const industrialCapabilities = [
         {
             icon: Cpu,
-            color: 'bg-blue-50',
-            iconColor: 'text-blue-600',
+            color: 'bg-emerald-50',
+            iconColor: 'text-emerald-700',
             title: 'Industrial IoT Telemetry',
             desc: 'Live high-frequency stream from ESP32 nodes and SCADA gateways, tracking multi-phase voltage, current, active power, and power factors.'
         },
         {
             icon: AlertTriangle,
-            color: 'bg-amber-50',
-            iconColor: 'text-amber-600',
+            color: 'bg-emerald-50',
+            iconColor: 'text-emerald-700',
             title: '3-Tier Loss Forensics',
             desc: 'Continuous detection of transmission line resistance loss, phase imbalances, transformer heating, and reactive power waste.'
         },
         {
             icon: Activity,
             color: 'bg-emerald-50',
-            iconColor: 'text-emerald-600',
+            iconColor: 'text-emerald-700',
             title: 'Predictive Machine Health',
             desc: 'Continuous vibration, thermal, and load profiling for heavy plant machinery and XT2 overhead cranes with maintenance forecasting.'
         },
         {
             icon: Leaf,
-            color: 'bg-green-50',
-            iconColor: 'text-green-600',
+            color: 'bg-emerald-50',
+            iconColor: 'text-emerald-700',
             title: 'Certified Carbon Accounting',
             desc: 'Deterministic Scope 1 and Scope 2 calculation engine compliant with CEA v19 grid emission factors and IPCC AR6 standards.'
         },
         {
             icon: Gauge,
-            color: 'bg-purple-50',
-            iconColor: 'text-purple-600',
+            color: 'bg-emerald-50',
+            iconColor: 'text-emerald-700',
             title: 'Power Factor Optimization',
             desc: 'Automated capacitor bank recommendations and penalty-prevention alerts for lagging/leading reactive loads.'
         },
         {
             icon: FileSpreadsheet,
-            color: 'bg-rose-50',
-            iconColor: 'text-rose-600',
+            color: 'bg-emerald-50',
+            iconColor: 'text-emerald-700',
             title: 'Audit-Ready ESG Reports',
             desc: 'Instant export of verified operational carbon metrics, energy balance sheets, and compliance-ready audit summaries.'
         }
@@ -71,7 +72,7 @@ export default function Page() {
     ];
 
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen text-gray-900">
             {/* ── Hero ── */}
             <section className="pt-12 pb-16 px-4 text-center max-w-5xl mx-auto">
                 <motion.div
@@ -87,18 +88,18 @@ export default function Page() {
                     </div>
 
                     {/* Status pill */}
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-50 border border-blue-100 rounded-full text-xs font-bold text-blue-800 mb-6">
-                        <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full text-xs font-bold text-emerald-800 mb-6">
+                        <span className="w-2 h-2 bg-emerald-600 rounded-full animate-pulse" />
                         Industrial Operations Engine — Live Telemetry Active
                     </div>
 
                     {/* Main heading */}
                     <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-gray-900 tracking-tight leading-[1.05] mb-4">
                         Industrial Carbon Intelligence<br className="hidden sm:inline" />
-                        <span className="text-blue-600"> & Energy Optimization</span>
+                        <span className="text-emerald-700"> & Energy Optimization</span>
                     </h1>
 
-                    <p className="text-base sm:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed mb-8">
+                    <p className="text-base sm:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed mb-8">
                         The unified operations platform for heavy industry. Deterministic carbon calculation, real-time ESP32 telemetry, line loss forensics, and predictive machine diagnostics.
                     </p>
 
@@ -106,25 +107,25 @@ export default function Page() {
                     <div className="max-w-2xl mx-auto mb-10">
                         <Link
                             href={isAuthenticated ? '/dashboard' : '/login'}
-                            className="block bg-white rounded-3xl border-2 border-blue-500/30 hover:border-blue-500 p-8 shadow-sm hover:shadow-lg transition-all group text-left relative overflow-hidden"
+                            className="block bg-white rounded-3xl border-2 border-emerald-600/30 hover:border-emerald-600 p-8 shadow-sm hover:shadow-lg transition-all group text-left relative overflow-hidden"
                         >
                             <div className="flex items-center justify-between mb-4">
-                                <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold">
-                                    <Building2 size={28} />
+                                <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                                    <Factory size={28} />
                                 </div>
-                                <span className="px-3.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-bold border border-blue-100">
+                                <span className="px-3.5 py-1 bg-emerald-50 text-emerald-800 rounded-full text-xs font-bold border border-emerald-200">
                                     Industrial Platform Active
                                 </span>
                             </div>
-                            <h2 className="text-2xl font-black text-gray-900 group-hover:text-blue-700 transition-colors">
+                            <h2 className="text-2xl font-black text-gray-900 group-hover:text-emerald-700 transition-colors">
                                 Industrial Operations Dashboard
                             </h2>
-                            <p className="text-sm text-gray-500 mt-2 mb-6 leading-relaxed">
+                            <p className="text-sm text-gray-600 mt-2 mb-6 leading-relaxed">
                                 Monitor real-time SCADA telemetry across TX1/TX2/TX3 nodes and XT2 Cranes, track line loss percentages, calculate carbon footprints, and prevent equipment downtime.
                             </p>
                             <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                                <span className="text-xs text-gray-400 font-semibold">ESP32 Mesh · 868MHz Protocol · Modbus/TCP</span>
-                                <div className="flex items-center gap-1.5 text-sm font-extrabold text-blue-700">
+                                <span className="text-xs text-gray-500 font-semibold">ESP32 Mesh · 868MHz Protocol · Modbus/TCP</span>
+                                <div className="flex items-center gap-1.5 text-sm font-extrabold text-emerald-700">
                                     <span>Enter Operations Dashboard</span>
                                     <ArrowRight size={16} className="group-hover:translate-x-1.5 transition-transform" />
                                 </div>
@@ -137,22 +138,22 @@ export default function Page() {
             {/* ── Architecture Pipeline ── */}
             <section className="max-w-6xl mx-auto px-4 pb-20">
                 <div className="text-center mb-10">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 rounded-full text-xs font-bold text-gray-700 mb-2">
-                        <Activity size={13} className="text-blue-600" />
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-100 rounded-full text-xs font-bold text-emerald-800 mb-2">
+                        <Activity size={13} className="text-emerald-600" />
                         Forensic Industrial Architecture
                     </div>
                     <h2 className="text-3xl font-black text-gray-900">End-to-End Telemetry to Decision Loop</h2>
-                    <p className="text-sm text-gray-500 max-w-xl mx-auto mt-1">
+                    <p className="text-sm text-gray-600 max-w-xl mx-auto mt-1">
                         High-frequency plant data stream turned into actionable carbon and energy reduction insights.
                     </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {pipelineSteps.map((step) => (
-                        <div key={step.step} className="bg-white rounded-2xl border border-gray-100 p-5 hover:border-gray-200 transition-all">
-                            <div className="text-xs font-black text-blue-600 mb-1">{step.step}</div>
+                        <div key={step.step} className="bg-white rounded-2xl border border-gray-100 p-5 hover:border-emerald-200 transition-all">
+                            <div className="text-xs font-black text-emerald-700 mb-1">{step.step}</div>
                             <h3 className="text-sm font-extrabold text-gray-900 mb-1">{step.title}</h3>
-                            <p className="text-xs text-gray-500 leading-snug">{step.desc}</p>
+                            <p className="text-xs text-gray-600 leading-snug">{step.desc}</p>
                         </div>
                     ))}
                 </div>
@@ -162,7 +163,7 @@ export default function Page() {
             <section className="max-w-6xl mx-auto px-4 pb-20">
                 <div className="text-center mb-10">
                     <h2 className="text-3xl font-black text-gray-900">Plant-Grade Intelligence Capabilities</h2>
-                    <p className="text-sm text-gray-500 max-w-lg mx-auto mt-1">
+                    <p className="text-sm text-gray-600 max-w-lg mx-auto mt-1">
                         Engineered for plant managers, electrical engineers, and sustainability directors.
                     </p>
                 </div>
@@ -171,13 +172,13 @@ export default function Page() {
                     {industrialCapabilities.map((item, i) => (
                         <div
                             key={i}
-                            className="bg-white rounded-3xl border border-gray-100 p-7 hover:border-gray-200 hover:shadow-md transition-all"
+                            className="bg-white rounded-3xl border border-gray-100 p-7 hover:border-emerald-200 hover:shadow-md transition-all"
                         >
                             <div className={`w-12 h-12 ${item.color} rounded-2xl flex items-center justify-center mb-5`}>
                                 <item.icon size={24} className={item.iconColor} />
                             </div>
                             <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
-                            <p className="text-gray-500 text-xs leading-relaxed">{item.desc}</p>
+                            <p className="text-gray-600 text-xs leading-relaxed">{item.desc}</p>
                         </div>
                     ))}
                 </div>
@@ -185,19 +186,19 @@ export default function Page() {
 
             {/* ── CTA Banner ── */}
             <section className="max-w-4xl mx-auto px-4 pb-20 text-center">
-                <div className="bg-gradient-to-r from-blue-900 via-gray-900 to-slate-900 rounded-3xl p-10 text-white shadow-xl">
+                <div className="bg-gradient-to-r from-emerald-950 via-gray-950 to-emerald-950 rounded-3xl p-10 text-white shadow-xl border border-emerald-900/40">
                     <h2 className="text-3xl font-extrabold mb-3">Maximize Electrical Efficiency & Cut Plant Emissions</h2>
-                    <p className="text-blue-100 text-sm max-w-xl mx-auto mb-8">
+                    <p className="text-emerald-100/90 text-sm max-w-xl mx-auto mb-8">
                         Deploy real-time energy telemetry and forensic carbon intelligence across your entire facility today.
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Link href={isAuthenticated ? '/dashboard' : '/login'}>
-                            <button className="px-8 py-4 bg-white text-blue-900 font-extrabold rounded-2xl hover:bg-blue-50 transition-all shadow-sm">
+                            <button className="px-8 py-4 bg-white text-emerald-950 font-extrabold rounded-2xl hover:bg-emerald-50 transition-all shadow-sm">
                                 Open Industrial Dashboard
                             </button>
                         </Link>
                         <Link href={isAuthenticated ? '/machines' : '/login'}>
-                            <button className="px-8 py-4 bg-white/10 text-white font-extrabold rounded-2xl border border-white/20 hover:bg-white/20 transition-all">
+                            <button className="px-8 py-4 bg-emerald-900/40 text-emerald-100 font-extrabold rounded-2xl border border-emerald-500/30 hover:bg-emerald-900/60 transition-all">
                                 View Connected Machinery
                             </button>
                         </Link>

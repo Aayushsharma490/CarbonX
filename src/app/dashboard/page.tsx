@@ -180,7 +180,7 @@ export default function DashboardPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
-                        <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200">
+                        <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200">
                             Industrial Operations Platform
                         </span>
                         <span className="text-xs text-gray-400 font-medium">· Real-Time SCADA & IoT Telemetry</span>
@@ -219,7 +219,7 @@ export default function DashboardPage() {
                     icon={Leaf}
                     trend="down"
                     trendLabel="-1.1%"
-                    accentColor="#2563eb"
+                    accentColor="#16a34a"
                 />
                 <IndustrialMetricCard
                     label="System Health"
@@ -227,7 +227,7 @@ export default function DashboardPage() {
                     unit="/100"
                     icon={Activity}
                     trend="neutral"
-                    accentColor="#7c3aed"
+                    accentColor="#059669"
                 />
                 <IndustrialMetricCard
                     label="Line Loss"
@@ -311,15 +311,15 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Link
                     href="/machines"
-                    className="p-5 bg-white rounded-2xl border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all group"
+                    className="p-5 bg-white rounded-2xl border border-gray-100 hover:border-emerald-200 hover:shadow-md transition-all group"
                 >
                     <div className="flex items-center justify-between mb-2">
-                        <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
                             <Activity size={20} />
                         </div>
-                        <ArrowRight size={16} className="text-gray-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
+                        <ArrowRight size={16} className="text-gray-300 group-hover:text-emerald-700 group-hover:translate-x-1 transition-all" />
                     </div>
-                    <div className="font-bold text-gray-900 group-hover:text-blue-700">Machine Health & Diagnostics</div>
+                    <div className="font-bold text-gray-900 group-hover:text-emerald-700">Machine Health & Diagnostics</div>
                     <div className="text-xs text-gray-500 mt-1">Vibration, phase imbalance, thermal load, and predictive crane maintenance.</div>
                 </Link>
 
